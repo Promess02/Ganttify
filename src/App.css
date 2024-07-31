@@ -13,17 +13,23 @@
   color: white;
 }
 
-.main-content {
+#main-content {
   display: flex;
-  justify-content: space-between;
-  margin: 0 2%;
+  flex-direction: column;
+  height: 100vh; /* Make the main content take up the full viewport height */
 }
 
-.spreadsheet-container {
+#spreadsheet-container {
+  flex: 1; /* Allow the spreadsheet to grow and shrink */
+  overflow: auto; /* Add scroll if content overflows */
   width: 35%;
 }
 
-.gantt-chart-container {
+#gantt-chart-container {
+    flex: 1; /* Allow the Gantt chart to grow and shrink */
+  overflow: auto; /* Add scroll if content overflows */
+  display: flex;
+  flex-direction: column;
   width: 55%;
 }
 
@@ -34,26 +40,19 @@
   overflow: hidden;
 }
 
-/* Additional styling for the grid itself, if needed */
-.react-grid-Container {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  font-size: 14px;
+/* Mermaid Gantt Chart Styles */
+#gantt-chart-container .mermaid {
+  flex: 1; /* Make the mermaid chart take up all available space */
 }
 
-/* Header row styling */
-.react-grid-Header {
-  background-color: #f0f0f0;
-  color: #333;
-  font-weight: bold;
+#gantt-chart-container .mermaid .titleText {
+  font-size: 24px; /* Change title font size */
 }
 
-/* Cell styling */
-.react-grid-Cell {
-  border-right: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
+#gantt-chart-container .mermaid .sectionTitle {
+  font-size: 18px; /* Change section title font size */
 }
 
-/* Adjust the last cell border to match others */
-.react-grid-Cell:last-child {
-  border-right: none;
+#gantt-chart-container .mermaid .tick text {
+  font-size: 12px; /* Change date axis font size */
 }
