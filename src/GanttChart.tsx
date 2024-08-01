@@ -11,8 +11,8 @@ const GanttChart = ({ rows }) => {
         barGap: 15,
         fontSize: 20,
         tickInterval: '1 week',
-        axisFormat: '%d-%m-%Y' // Change the type to string
-      }
+        axisFormat: '%d-%m-%Y'
+      },
     });
 
 
@@ -49,7 +49,7 @@ const GanttChart = ({ rows }) => {
     renderChart();
   }, [rows]);
 
-  return <div id="mermaid-container"><div id='mermaid-chart' ref={chartRef} /></div>;
+  return <div ref={chartRef}></div>;
 };
 
 export default GanttChart;

@@ -32,27 +32,40 @@ code {
   flex-direction: row;
   justify-content: space-between;
   margin: 0 2%;
-  height: 90vh;
+  height: 100vh;
 }
 
 #spreadsheet-container {
-  flex: 3;
-  overflow: auto;
+  flex: 3; /* Allow the spreadsheet to grow and shrink */
+  overflow: auto; /* Add scroll if content overflows */
+  width: 35%;
 }
 
 #gantt-chart-container {
-  flex: 5;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  margin-top: 10px;
+  flex:5;
+  width: 65%;
+  height: 100vh;
 }
 
-#mermaid-container {
-  flex-grow: 1;
-  display: flex;
+#ganttChart {
+  font-size: 30px !important;
 }
 
-#mermaid-chart {
-  width: 100%;
-  height: 100%;
+#ganttChart .titleText{
+  font-size: 30px !important;
+}
+
+#ganttChart .grid .tick text {
+  font-size: initial;
+}
+
+#ganttChart .sectionTitle{
+  font-size: initial;
+}
+
+.rnvodz57-0-0-beta-44 {
+  @layer rdg.Root{
+    block-size: 600px !important;
+  }
 }
