@@ -11,7 +11,8 @@ const GanttChart = ({ rows }) => {
         barGap: 15,
         fontSize: 20,
         tickInterval: '1 week',
-        axisFormat: '%d-%m-%Y'
+        axisFormat: '%d-%m-%Y',
+        weekday: 'monday'
       },
     });
 

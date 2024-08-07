@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import DataGrid, { Column, textEditor } from 'react-data-grid';
+import DataGrid from 'react-data-grid';
 import GanttChart from './GanttChart.tsx';
 import 'react-data-grid/lib/styles.css';
+import ResizableContainer from './ResizableContainer.tsx';
 import {Row} from "./Row.tsx";
 import {columns, initialRows} from './data.tsx';
 
@@ -33,10 +34,12 @@ const App: React.FC = () => {
         </header>
       </div>
       <div id="main-content">
+      <ResizableContainer>
         <div id="spreadsheet-container">{gridElement}</div>
         <div id="gantt-chart-container">
           <GanttChart rows={rows} />
         </div>
+      </ResizableContainer>
       </div>
     </>
   );
