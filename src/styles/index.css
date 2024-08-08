@@ -38,6 +38,7 @@ code {
 #spreadsheet-container {
   flex: 3; /* Allow the spreadsheet to grow and shrink */
   overflow: auto; /* Add scroll if content overflows */
+  min-height: 800px;
   width: 100%;
 }
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { cn } from './cn.ts'
+import { cn } from '../Util/cn.ts'
 
 const SampleSplitter = ({
   id = 'drag-bar',

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import GanttChart from './GanttChart';
+import GanttChart from './GanttChart.tsx';
 import GridComponent from './GridComponent.tsx';
 
 const ParentComponent = () => {

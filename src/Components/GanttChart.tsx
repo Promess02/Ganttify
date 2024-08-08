@@ -10,7 +10,7 @@ const GanttChart = ({ rows }) => {
         barHeight: 30,
         barGap: 15,
         fontSize: 20,
-        tickInterval: '1 week',
+        tickInterval: '1 month',
         axisFormat: '%d-%m-%Y',
         weekday: 'monday'
       },

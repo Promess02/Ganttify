@@ -1,7 +1,7 @@
 import React from 'react';
 import { useResizable } from 'react-resizable-layout';
 import SampleSplitter from './SampleSplitter.tsx'; // Assuming you have this component
-import {cn} from './cn.ts'
+import {cn} from '../Util/cn.ts'
 
 const ResizableContainer = ({ children }) => {
   const {
