@@ -9,38 +9,29 @@ type SelectedCellState = {
   };
 
   const incrementSequence = (sequence: string): string => {
-    // Split the sequence by dots
     const parts = sequence.split('.');
   
-    // Convert the last part to a number and increment it
     const lastNumber = parseInt(parts[parts.length - 1], 10);
     parts[parts.length - 1] = (lastNumber + 1).toString();
   
-    // Join the parts back into a string
     return parts.join('.');
   };
 
   const decrementSequence = (sequence: string): string => {
-    // Split the sequence by dots
     const parts = sequence.split('.');
   
-    // Convert the last part to a number and increment it
     const lastNumber = parseInt(parts[parts.length - 1], 10);
     parts[parts.length - 1] = (lastNumber -1).toString();
   
-    // Join the parts back into a string
     return parts.join('.');
   };
 
   
   const findDepth = (idx: string): number => {
-    // Split the string by dots and count the number of parts
     const parts = idx.split('.');
-    // The number of dots is one less than the number of parts
     return parts.length - 1;
   };
 
-// rowHandlers.tsx
 export const handleAddRow = (
     rows: readonly Row[],
     setRows: React.Dispatch<React.SetStateAction<readonly Row[]>>,
@@ -71,13 +62,21 @@ export const handleAddRow = (
         const newRows = rows.filter((_, index) => index !== selectedCell.rowNumber);
     
         for (let i = selectedCell.rowNumber; i < newRows.length; i++) {
-          if(findDepth(newRows[i].idx) === findDepth(selectedCell.rowIdx))
+          if(findDepth(newRows[i].idx) === findDepth(selectedCell.rowIdx) 
+            && getSelectedCellBase(newRows[i].idx) === getSelectedCellBase(selectedCell.rowIdx))
           newRows[i] = { ...newRows[i],idx: decrementSequence(newRows[i].idx) };
         }
     
         setRows(newRows);
         setSelectedCell(null);
       }
+  };
+
+  const getSelectedCellBase = (str: string): number => {
+    const lastDotIndex = str.lastIndexOf('.');
+    const secondLastDotIndex = str.lastIndexOf('.', lastDotIndex - 1);
+    const selectedCellBase = str.substring(secondLastDotIndex + 1, lastDotIndex);
+    return Number(selectedCellBase);
   };
   
   export const handleAddSubtasks = (rows: readonly Row[],
@@ -86,13 +85,83 @@ export const handleAddRow = (
     numSubtasks: number) => {
     if (selectedCell) {
         const newRows = [...rows];
-        let Id = selectedCell.rowIdx + ".0";
+        
+        let row_idx = newRows[selectedCell.rowNumber].idx;
+        let selectedCellBase = getSelectedCellBase(row_idx);
+        let start = 0;
+
+        while (true) {
+          row_idx = newRows[selectedCell.rowNumber+start+1].idx;
+          if(!row_idx.includes('.') || getSelectedCellBase(row_idx) === selectedCellBase)
+            break;
+          else start++;
+        }
+        let Id = `${selectedCell.rowIdx}.${start}`;
         for (let i = 1; i <= numSubtasks; i++) {
           Id = incrementSequence(Id);
           const newRow = { idx: Id, name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' };
-          newRows.splice(selectedCell.rowNumber + i, 0, newRow);
+          newRows.splice(selectedCell.rowNumber + start + i, 0, newRow);
         }
     
         setRows(newRows);
       }
+  };
+
+  export const handleIndentTask = (
+    rows: readonly Row[],
+    setRows: React.Dispatch<React.SetStateAction<readonly Row[]>>,
+    selectedCell: SelectedCellState | null
+  ) => {
+    if (selectedCell && selectedCell.rowNumber > 0) {
+      const newRows = [...rows];
+      const selectedRow = newRows[selectedCell.rowNumber];
+      const previousRow = newRows[selectedCell.rowNumber - 1];
+  
+      const previousRowIdx = previousRow.idx;
+      const subtaskNumbers = newRows
+        .filter(row => row.idx.startsWith(`${previousRowIdx}.`))
+        .map(row => parseInt(row.idx.split('.').pop() || '0', 10));
+      const nextSubtaskNumber = Math.max(0, ...subtaskNumbers) + 1;
+  
+      const newIdx = `${previousRowIdx}.${nextSubtaskNumber}`;
+      newRows[selectedCell.rowNumber] = { ...selectedRow, idx: newIdx };
+      
+      for (let i = selectedCell.rowNumber; i < newRows.length; i++) {
+        if(findDepth(newRows[i].idx) === findDepth(selectedCell.rowIdx))
+        newRows[i] = { ...newRows[i],idx: decrementSequence(newRows[i].idx) };
+      }
+  
+      setRows(newRows);
+    }
+  };
+
+  export const handleOutdentTask = (
+    rows: readonly Row[],
+    setRows: React.Dispatch<React.SetStateAction<readonly Row[]>>,
+    selectedCell: SelectedCellState | null
+  ) => {
+    if (selectedCell && selectedCell.rowNumber > 0) {
+      const newRows = [...rows];
+      const selectedRow = newRows[selectedCell.rowNumber];
+      const previousRow = newRows[selectedCell.rowNumber - 1];
+  
+      if (selectedRow.idx.includes('.')) {
+        const previousRowIdx = previousRow.idx;
+  
+        const previousRowParts = previousRowIdx.split('.');
+        const lastPart = parseInt(previousRowParts.pop() || '0', 10) + 1;
+        const newIdx = [...previousRowParts, lastPart].join('.');
+  
+        newRows[selectedCell.rowNumber] = { ...selectedRow, idx: newIdx };
+  
+        for (let i = selectedCell.rowNumber + 1; i < newRows.length; i++) {
+          if (newRows[i].idx.startsWith(selectedRow.idx)) {
+            const updatedIdx = newRows[i].idx.replace(selectedRow.idx, newIdx);
+            newRows[i] = { ...newRows[i], idx: updatedIdx };
+          }
+        }
+  
+        setRows(newRows);
+      }
+    }
   };

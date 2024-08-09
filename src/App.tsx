@@ -6,7 +6,7 @@ import ResizableContainer from './Components/ResizableContainer.tsx';
 import MyAppBar from './Components/MyAppBar.tsx'; 
 import { Row } from "./Model/Row.tsx";
 import { columns, initialRows } from './Model/data.tsx';
-import { handleAddRow, handleDeleteRow, handleAddSubtasks } from './Logic/rowHandlers.tsx';
+import { handleAddRow, handleDeleteRow, handleAddSubtasks, handleIndentTask, handleOutdentTask } from './Logic/rowHandlers.tsx';
 
 function rowKeyGetter(row: Row) {
   return row.idx;
@@ -18,13 +18,13 @@ type SelectedCellState = {
   depth: number
 };
 
-const findRowIndexByIdx = (rows: readonly Row[], idx: string): number => {
-  return rows.findIndex(row => row.idx === idx);
-};
-
 const findDepth = (idx: string): number => {
   const parts = idx.split('.');
   return parts.length - 1;
+};
+
+const findRowIndexByIdx = (rows: readonly Row[], idx: string): number => {
+  return rows.findIndex(row => row.idx === idx);
 };
 
 const App: React.FC = () => {
@@ -50,16 +50,14 @@ const App: React.FC = () => {
       onCellClick={handleCellClick}
     />
   );
-    
-    const findRowIndexByIdx = (rows: readonly Row[], idx: string): number => {
-      return rows.findIndex(row => row.idx === idx);
-    };
   
   return (
     <>
       <MyAppBar onAddRow={() => handleAddRow(rows,setRows,selectedCell,setSelectedCell)} 
       onDeleteRow={ () => handleDeleteRow(rows,setRows,selectedCell,setSelectedCell)}
-       onAddSubtasks={(numSubtasks) => handleAddSubtasks(rows,setRows,selectedCell, numSubtasks)} /> {}
+       onAddSubtasks={(numSubtasks) => handleAddSubtasks(rows,setRows,selectedCell, numSubtasks)} 
+       onIndentRow={()=>handleIndentTask(rows,setRows,selectedCell)}
+       onOutdentRow={()=>handleOutdentTask(rows,setRows,selectedCell)}/> {}
       <div id="main-content">
         <ResizableContainer>
           <div id="spreadsheet-container" className="spreadsheet-container">{gridElement}</div>

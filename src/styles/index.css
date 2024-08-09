@@ -29,6 +29,7 @@ code {
 
 #main-content {
   display: flex;
+  padding-top: 124px;
   flex-direction: row;
   justify-content: space-between;
   margin: 0 1%;

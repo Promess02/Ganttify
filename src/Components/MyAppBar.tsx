@@ -7,19 +7,21 @@ interface MyAppBarProps {
     onAddRow: () => void;
     onDeleteRow: () => void;
     onAddSubtasks: (numSubtasks: number) => void;
+    onIndentRow: () => void;
+    onOutdentRow: () => void;
   }
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
     alignItems: 'flex-start',
     paddingTop: theme.spacing(1),
     paddingBottom: theme.spacing(2),
-    // Override media queries injected by theme.mixins.toolbar
+
     '@media all': {
       minHeight: 100,
     },
   }));
 
-const MyAppBar: React.FC<MyAppBarProps> = ({ onAddRow, onDeleteRow, onAddSubtasks}) => {
+const MyAppBar: React.FC<MyAppBarProps> = ({ onAddRow, onDeleteRow, onAddSubtasks, onIndentRow, onOutdentRow}) => {
     const [numSubtasks, setNumSubtasks] = useState(1);
 
     const handleNumSubtasksChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -28,7 +30,7 @@ const MyAppBar: React.FC<MyAppBarProps> = ({ onAddRow, onDeleteRow, onAddSubtask
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-    <AppBar position="static">
+    <AppBar position="fixed">
       <StyledToolbar>
         <IconButton
           size="large"
@@ -50,8 +52,8 @@ const MyAppBar: React.FC<MyAppBarProps> = ({ onAddRow, onDeleteRow, onAddSubtask
               inputProps={{ min: 1 }}
               sx={{ width: 60 }}
             />
-            <Button color="inherit">Indent Task</Button>
-            <Button color="inherit">Outdent Task</Button>
+            <Button color="inherit" onClick={onIndentRow}>Indent Task</Button>
+            <Button color="inherit" onClick={onOutdentRow}>Outdent Task</Button>
             <Button color="inherit">Define Resources</Button>
             <Button color="inherit">Link Resource</Button>
             <Button color="inherit">Unlink Resource</Button>
