@@ -48,6 +48,7 @@ export const handleAddRow = (
           newRows[i] = { ...newRows[i], idx: incrementSequence(newRows[i].idx) };
         }
     
+        setSelectedCell(null);
         setRows(newRows);
       }
   };
@@ -59,17 +60,30 @@ export const handleAddRow = (
     setSelectedCell: React.Dispatch<React.SetStateAction<SelectedCellState | null>>
   ) => {
     if (selectedCell) {
-        const newRows = rows.filter((_, index) => index !== selectedCell.rowNumber);
-    
-        for (let i = selectedCell.rowNumber; i < newRows.length; i++) {
-          if(findDepth(newRows[i].idx) === findDepth(selectedCell.rowIdx) 
-            && getSelectedCellBase(newRows[i].idx) === getSelectedCellBase(selectedCell.rowIdx))
-          newRows[i] = { ...newRows[i],idx: decrementSequence(newRows[i].idx) };
+      const selectedTaskIdx = rows[selectedCell.rowNumber].idx;
+      const newRows = rows.filter((row) => !row.idx.startsWith(selectedTaskIdx));
+  
+      const updateChildIdx = (parentIdx: string, newParentIdx: string) => {
+        for (let i = 0; i < newRows.length; i++) {
+          if (newRows[i].idx.startsWith(parentIdx) && newRows[i].idx !== parentIdx) {
+            const childIdx = newRows[i].idx.replace(parentIdx, newParentIdx);
+            newRows[i] = { ...newRows[i], idx: childIdx };
+          }
         }
-    
-        setRows(newRows);
-        setSelectedCell(null);
+      };
+  
+      for (let i = selectedCell.rowNumber; i < newRows.length; i++) {
+        if (findDepth(newRows[i].idx) === findDepth(selectedCell.rowIdx)
+          && getSelectedCellBase(newRows[i].idx) === getSelectedCellBase(selectedCell.rowIdx)) {
+          const oldIdx = newRows[i].idx;
+          newRows[i] = { ...newRows[i], idx: decrementSequence(newRows[i].idx) };
+          updateChildIdx(oldIdx, newRows[i].idx);
+        }
       }
+  
+      setRows(newRows);
+      setSelectedCell(null);
+    }
   };
 
   const getSelectedCellBase = (str: string): number => {
@@ -147,7 +161,6 @@ export const handleAddRow = (
   
       if (selectedRow.idx.includes('.')) {
         const previousRowIdx = previousRow.idx;
-  
         const previousRowParts = previousRowIdx.split('.');
         const lastPart = parseInt(previousRowParts.pop() || '0', 10) + 1;
         const newIdx = [...previousRowParts, lastPart].join('.');
