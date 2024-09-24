@@ -36,7 +36,7 @@ const columns: readonly Column<Row>[] = [
 //   { idx: 19, name: 'Task 19', duration: '7', start_date: '2025-02-27', hours: '34', worker_id: '2' }
 // ];
 
-const initialRows: readonly Row[] = [
+const initialRows: Row[] = [
   { idx: '1', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: ''},
   { idx: '2', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
   { idx: '3', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
