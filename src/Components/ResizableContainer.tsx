@@ -10,13 +10,11 @@ const ResizableContainer = ({ children }) => {
     splitterProps: resizeBarProps,
   } = useResizable({
     axis: 'x',
-    initial: 800,
-    min: 500,
+    initial: 1100,
+    min: 700,
     max: 1300,
     reverse: true
   });
-
-  console.log('Container Width:', containerWidth); // Debugging log
 
   return (
     <div className={

@@ -16,7 +16,7 @@ class TaskNode {
     this.parent = parent;
     this.children = [];
     this.isLastChild = false;
-    this.level = row.idx.split('.').length; // Task level depends on the number of dots in the index
+    this.level = row.idx.split(".").length; // Task level depends on the number of dots in the index
   }
 
   // Add a child to the node
@@ -27,7 +27,9 @@ class TaskNode {
 
   // Remove a child along with all its subtasks
   removeChild(index: string) {
-    const childIndex = this.children.findIndex((child) => child.rowIdx === index);
+    const childIndex = this.children.findIndex(
+      (child) => child.rowIdx === index
+    );
     if (childIndex !== -1) {
       this.children.splice(childIndex, 1);
       this.updateLastChildFlags();
@@ -36,9 +38,9 @@ class TaskNode {
 
   // Increment the task index
   incrementIndex(index: string): string {
-    const parts = index.split('.').map(Number);
+    const parts = index.split(".").map(Number);
     parts[parts.length - 1] += 1;
-    const newIdx = parts.join('.');
+    const newIdx = parts.join(".");
     this.rowIdx = newIdx;
     this.row.idx = newIdx;
     return newIdx;
@@ -46,12 +48,28 @@ class TaskNode {
 
   // Decrement the task index
   decrementIndex(index: string): string {
-    const parts = index.split('.').map(Number);
+    const parts = index.split(".").map(Number);
     parts[parts.length - 1] -= 1;
-    const newIdx = parts.join('.');
+    const newIdx = parts.join(".");
     this.rowIdx = newIdx;
     this.row.idx = newIdx;
     return newIdx;
+  }
+
+  addChildren(numberOfChildren: number) {
+    const baseIndex = this.rowIdx;
+    const existingChildrenCount = this.children.length;
+    let startIndex = existingChildrenCount + 1;
+
+    for (let i = 0; i < numberOfChildren; i++) {
+      const newIndex = `${baseIndex}.${startIndex + i}`;
+      const newTask = new TaskNode(
+        this.generateRow(newIndex, ""),
+        this.rowNumber + i + 1,
+        this
+      );
+      this.children.push(newTask);
+    }
   }
 
   // Recursively update the indices of children
@@ -62,10 +80,13 @@ class TaskNode {
     // Update the children's indexes recursively
     for (let child of this.children) {
       // Calculate the new index for the child
-      const childOldParts = child.rowIdx.split('.');
-      const childNewParts = newIndex.split('.');
-      childNewParts[childNewParts.length - 1] = childOldParts[childOldParts.length - 1]; // Keep the last part of the index the same
-      const childNewIndex = childNewParts.join('.');
+      const childOldParts = child.rowIdx.split(".");
+      const childNewParts = newIndex.split(".");
+      childNewParts.push(
+        String(Number(childOldParts[childOldParts.length - 1])
+      ));
+    
+      const childNewIndex = childNewParts.join(".");
 
       // Recursively update the child's index and its descendants
       child.updateChildIndexRecursive(childNewIndex);
@@ -73,13 +94,52 @@ class TaskNode {
   }
 
   // Update the isLastChild flag for all children
-    updateLastChildFlags() {
-      for (let i = 0; i < this.children.length; i++) {
-        if (i !== this.children.length - 1) {
+  updateLastChildFlags() {
+    for (let i = 0; i < this.children.length; i++) {
+      if (i !== this.children.length - 1) {
         this.children[i].isLastChild = false;
       } else {
         this.children[i].isLastChild = true;
       }
+    }
+  }
+
+  private generateRow(idx: string, name: string): Row {
+    return {
+      idx,
+      name,
+      duration: "",
+      start_date: "",
+      end_date: "",
+      hours: "",
+      worker_id: "",
+      predecessor: "",
+    };
+  }
+
+  reverseChildrenOrder() {
+    this.children.reverse();
+    for (let child of this.children) {
+      child.reverseChildrenOrder();
+    }
+  }
+
+  orderChildrenByIndex() {
+    this.children.sort((a, b) => {
+      const aParts = a.rowIdx.split('.').map(Number);
+      const bParts = b.rowIdx.split('.').map(Number);
+  
+      for (let i = 0; i < Math.min(aParts.length, bParts.length); i++) {
+        if (aParts[i] !== bParts[i]) {
+          return aParts[i] - bParts[i];
+        }
+      }
+  
+      return aParts.length - bParts.length;
+    });
+  
+    for (let child of this.children) {
+      child.orderChildrenByIndex();
     }
   }
 }
@@ -89,38 +149,44 @@ export class TaskTree {
   root: TaskNode;
 
   constructor(rows: Row[]) {
-    this.root = new TaskNode({
-      idx: '0',
-      name: 'Root',
-      duration: '',
-      start_date: '',
-      end_date: '',
-      hours: '',
-      worker_id: '',
-      predecessor: '',
-    }, -1);
+    this.root = new TaskNode(
+      {
+        idx: "0",
+        name: "Root",
+        duration: "",
+        start_date: "",
+        end_date: "",
+        hours: "",
+        worker_id: "",
+        predecessor: "",
+      },
+      -1
+    );
     this.rows = rows;
     this.buildTree();
   }
 
   // Find a node based on its index
-  private findNode(index: string, currentNode: TaskNode = this.root): TaskNode | null {
+  private findNode(
+    index: string,
+    currentNode: TaskNode = this.root
+  ): TaskNode | null {
     const stack: TaskNode[] = [currentNode]; // Initialize a stack with the root node
-  
+
     // Perform depth-first search (DFS) iteratively using a stack
     while (stack.length > 0) {
       const node = stack.pop()!; // Pop the last element in the stack
-  
+
       // Check if this is the node we're looking for
       if (node.rowIdx === index) {
         return node;
       }
-  
+
       // Add children to the stack for further searching
       // We reverse the children array so that the first child gets processed first
       stack.push(...node.children.reverse());
     }
-  
+
     // Return null if the node with the given index wasn't found
     return null;
   }
@@ -138,7 +204,6 @@ export class TaskTree {
       const taskNode = new TaskNode(row, i++);
       nodeMap[row.idx] = taskNode;
 
-
       // Add tasks with no dots (e.g., 1, 2, 3) directly under the root
       if (taskNode.level === 1) {
         this.root.addChild(taskNode);
@@ -154,115 +219,153 @@ export class TaskTree {
       if (taskNode.level === 1) continue;
 
       // Find parent index (remove the last segment of the index)
-      const parentIndex = row.idx.split('.').slice(0, -1).join('.');
+      const parentIndex = row.idx.split(".").slice(0, -1).join(".");
       const parentNode = nodeMap[parentIndex];
 
       if (parentNode) {
         parentNode.addChild(taskNode);
         taskNode.parent = parentNode; // Set the parent attribute
+        parentNode.children.sort((a, b) => a.rowNumber - b.rowNumber);
       }
     }
 
-    this.root.children.reverse();
+    this.root.children.sort((a, b) => a.rowNumber - b.rowNumber);
   }
 
   // Add a new task automatically
   addTask(index: string) {
     const node = this.findNode(index);
     if (node && node.parent) {
-     const parent = node.parent;
-      const rowNumberIndex = this.rows.findIndex((child) => child.idx === node.rowIdx);
-      const childIndex = parent.children.findIndex((child) => child.rowIdx === index);
+      const parent = node.parent;
+      const rowNumberIndex = this.rows.findIndex(
+        (child) => child.idx === node.rowIdx
+      );
+      parent.children.reverse();
+      const childIndex = parent.children.findIndex(
+        (child) => child.rowIdx === index
+      );
       let newIndex = this.incrementIndex(index);
 
       // Generate a new row with a new index and default values
-      const newTask = new TaskNode(this.generateRow(newIndex, `Task ${newIndex}`), rowNumberIndex+1, parent);
+      const newTask = new TaskNode(
+        this.generateRow(newIndex, `Task ${newIndex}`),
+        rowNumberIndex + 1,
+        parent
+      );
 
       // Insert the new task as a sibling
-      parent.children.splice(rowNumberIndex+1, 0, newTask);
-      // this.addRow(newTask);
+      parent.children.splice(childIndex + 1, 0, newTask);
 
       // Shift the indices of subsequent tasks
-      for (let i = childIndex+1, j=i+1; i < parent.children.length; i++) {
-        parent.children[i].updateChildIndexRecursive(
-          newIndex
-        );
-        parent.children[j].rowNumber += 1;
-        newIndex = this.incrementIndex(newIndex)
+      for (let i = childIndex + 1; i < parent.children.length; i++) {
+        parent.children[i].updateChildIndexRecursive(newIndex);
+        newIndex = this.incrementIndex(newIndex);
       }
       // Update the last-child flag
+      this.root.reverseChildrenOrder();
+      this.root.orderChildrenByIndex();
       parent.updateLastChildFlags();
-      this.rows = this.root.children.map((child) => child.row);
+      this.assignRowNumbers();
+      this.mapTreeToRows();
     }
   }
 
   // Remove a task and its children from the tree and the rows array
   removeTask(index: string) {
     const node = this.findNode(index);
-      if (node && node.parent) {
-        const parent = node.parent;
-        const childIndex = parent.children.findIndex((child) => child.rowIdx === index);
-    
-        // Remove the task and its children from the parent's children array
-    
-        // Shift the indices of subsequent tasks
-        for (let i = childIndex+1; i < parent.children.length; i++) {
-          const child = parent.children[i];
-          const childNewIndex = this.decrementIndex(child.rowIdx);
-          child.rowIdx = childNewIndex;
-          child.updateChildIndexRecursive(childNewIndex);
-          child.rowNumber -= 1;
-        }
-    
-        node.parent.removeChild(index);
-        // Update the last-child flag
-        parent.updateLastChildFlags();
-        this.rows = this.root.children.map((child) => child.row);
+    this.root.orderChildrenByIndex();
+    if (node && node.parent) {
+      const parent = node.parent;
+      const childIndex = parent.children.findIndex(
+        (child) => child.rowIdx === index
+      );
+
+      node.parent.removeChild(index);
+      // Shift the indices of subsequent tasks
+      for (let i = childIndex; i < parent.children.length; i++) {
+        const child = parent.children[i];
+        const childNewIndex = this.decrementIndex(child.rowIdx);
+        child.rowIdx = childNewIndex;
+        child.row.idx = childNewIndex;
+        child.updateChildIndexRecursive(childNewIndex);
       }
-    
+
+      this.root.orderChildrenByIndex();
+      this.assignRowNumbers();
+      // Update the last-child flag
+      parent.updateLastChildFlags();
+      this.mapTreeToRows();
+    }
+  }
+
+  addSubtasks(index: string, numSubtasks: number) {
+    const node = this.findNode(index);
+    if (node && node.parent) {
+      node.addChildren(numSubtasks);
+      // const rowNumberIndex = this.rows.findIndex(
+      //   (child) => child.idx === node.rowIdx
+      // );
+      // for (let i = 0; i < numSubtasks; i++) {
+      //   this.rows.splice(rowNumberIndex + i + 1, 0, node.children[i].row);
+      // }
+      this.root.orderChildrenByIndex();
+      this.assignRowNumbers();
+      this.mapTreeToRows();
+    }
   }
 
   // Increment the index
   private incrementIndex(index: string): string {
-    const parts = index.split('.').map(Number);
+    const parts = index.split(".").map(Number);
     parts[parts.length - 1] += 1;
-    return parts.join('.');
+    return parts.join(".");
   }
 
   private decrementIndex(index: string): string {
-    const parts = index.split('.').map(Number);
+    const parts = index.split(".").map(Number);
     parts[parts.length - 1] -= 1;
-    return parts.join('.');
-  }
-
-  // Add a task node to the rows array
-  private addRow(node: TaskNode) {
-    this.rows.splice(node.rowNumber+1, 0, node.row); // Add the row to the rows array
-  }
-
-  // Remove all rows for a node and its children
-  private removeRowsForNode(node: TaskNode) {
-    this.rows = this.rows.filter((row) => !row.idx.startsWith(node.rowIdx));
+    return parts.join(".");
   }
 
   // Generate a new Row with default values
   private generateRow(idx: string, name: string): Row {
     return {
       idx,
-      name: '',
-      duration: '',
-      // start_date: new Date().toISOString().split('T')[0], // current date
-      // end_date: new Date().toISOString().split('T')[0], // current date
-      start_date: '',
-      end_date: '',
-      hours: '',
-      worker_id: '', // Default worker id, can be modified
-      predecessor: '',
+      name: "",
+      duration: "",
+      start_date: "",
+      end_date: "",
+      hours: "",
+      worker_id: "",
+      predecessor: "",
     };
   }
 
-  // Update the index recursively for children
-  private updateChildIndexRecursive(node: TaskNode, newIndex: string) {
-    node.updateChildIndexRecursive(newIndex);
+  assignRowNumbers() {
+    let currentRowNumber = 0;
+
+    const assignRowNumberRecursive = (node: TaskNode) => {
+      node.rowNumber = currentRowNumber++;
+      for (let child of node.children) {
+        assignRowNumberRecursive(child);
+      }
+    };
+
+    assignRowNumberRecursive(this.root);
+  }
+
+  mapTreeToRows() {
+    const rows: Row[] = [];
+
+    const mapTreeToRowsRecursive = (node: TaskNode) => {
+      if (node.row.idx !== "0") rows.push(node.row);
+      node.children.sort((a, b) => a.rowNumber - b.rowNumber);
+      for (let child of node.children) {
+        mapTreeToRowsRecursive(child);
+      }
+    };
+
+    mapTreeToRowsRecursive(this.root);
+    this.rows = rows;
   }
 }

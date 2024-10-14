@@ -27,6 +27,12 @@ code {
   color: white;
 }
 
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 #main-content {
   display: flex;
   padding-top: 124px;
@@ -79,6 +85,13 @@ code {
   height: 100%;
 }
 
+.fill-grid {
+  /* flex: 1; */
+  height: 100%;
+  /* display: flex;
+  flex-direction: column; */
+}
+
 .sample-drag-bar {
   flex-shrink: 0;
   width: 5px;
@@ -127,14 +140,6 @@ code {
   display: grid;
   place-items: start;
   transition: filter 0.2s ease-out, background-color 0.2s ease-out;
-}
-
-.spread {
-  flex: 3
-}
-
-.gantt {
-  flex: 5
 }
 
 .dragging {

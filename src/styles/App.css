@@ -16,17 +16,18 @@
 #main-content {
   display: flex;
   flex-direction: column;
-  height: 100vh; /* Make the main content take up the full viewport height */
+  height: 100%; /* Make the main content take up the full viewport height */
 }
 
 #spreadsheet-container {
   flex: 1; /* Allow the spreadsheet to grow and shrink */
   overflow: auto; /* Add scroll if content overflows */
+  flex-direction: column;
   width: 35%;
 }
 
 #gantt-chart-container {
-    flex: 1; /* Allow the Gantt chart to grow and shrink */
+  flex: 1; /* Allow the Gantt chart to grow and shrink */
   overflow: auto; /* Add scroll if content overflows */
   display: flex;
   flex-direction: column;

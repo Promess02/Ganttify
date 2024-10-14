@@ -4,7 +4,7 @@ import {Row} from './Row.tsx';
 // Define the columns
 const columns: readonly Column<Row>[] = [
   { key: 'idx', name: 'Index', editable: true, resizable: true, width: '55px',renderEditCell: textEditor },
-  { key: 'name', name: 'Name', editable: true,  width: '130px', renderEditCell: textEditor },
+  { key: 'name', name: 'Name', editable: true,  width: '160px', renderEditCell: textEditor },
   { key: 'duration', name: 'Duration', editable: true,  width: '78px', renderEditCell: textEditor },
   { key: 'start_date', name: 'Start Date', editable: true,  width: '92px', renderEditCell: textEditor },
   { key: 'end_date', name: 'End date', editable: true,  width: '92px', renderEditCell: textEditor },
@@ -55,7 +55,10 @@ const initialRows: Row[] = [
   { idx: '16', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
   { idx: '17', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
   { idx: '18', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
-  { idx: '19', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' }
+  { idx: '19', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
+  { idx: '20', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
+  { idx: '21', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
+  { idx: '22', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' }
 ];
 
 export {initialRows, columns};

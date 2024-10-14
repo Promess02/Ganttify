@@ -12,7 +12,8 @@ const GanttChart = ({ rows }) => {
         fontSize: 20,
         tickInterval: '1 month',
         axisFormat: '%d-%m-%Y',
-        weekday: 'monday'
+        weekday: 'monday',
+        gridLineStartPadding: 0.5
       },
     });
 
