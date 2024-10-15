@@ -7,6 +7,7 @@ const GanttChart = ({ rows }) => {
     mermaid.initialize({
       startOnLoad: true,
       gantt: {
+        titleTopMargin: 28,
         barHeight: 30,
         barGap: 15,
         fontSize: 20,
@@ -32,7 +33,6 @@ const GanttChart = ({ rows }) => {
           dateFormat  YYYY-MM-DD
           title A Gantt Diagram
 
-          section Faza projektowania
           ${ganttTasks}
         `;
 

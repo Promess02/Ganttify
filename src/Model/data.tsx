@@ -5,12 +5,12 @@ import {Row} from './Row.tsx';
 const columns: readonly Column<Row>[] = [
   { key: 'idx', name: 'Index', editable: true, resizable: true, width: '55px',renderEditCell: textEditor },
   { key: 'name', name: 'Name', editable: true,  width: '160px', renderEditCell: textEditor },
-  { key: 'duration', name: 'Duration', editable: true,  width: '78px', renderEditCell: textEditor },
+  { key: 'duration', name: 'Duration (days)', editable: true,  width: '120px', renderEditCell: textEditor },
   { key: 'start_date', name: 'Start Date', editable: true,  width: '92px', renderEditCell: textEditor },
   { key: 'end_date', name: 'End date', editable: true,  width: '92px', renderEditCell: textEditor },
   { key: 'hours', name: 'Hours', editable: true,  width: '60px', renderEditCell: textEditor },
   { key: 'worker_id', name: 'Worker Id', editable: true,  width: '85px', renderEditCell: textEditor },
-  { key: 'predecessor', name: 'Predecessor', editable: true,  width: '100px', renderEditCell: textEditor }
+  { key: 'parent', name: 'Parent task', editable: true,  width: '100px', renderEditCell: textEditor }
 ];
 
 // Sample rows data

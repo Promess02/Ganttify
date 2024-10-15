@@ -10,7 +10,7 @@ const ResizableContainer = ({ children }) => {
     splitterProps: resizeBarProps,
   } = useResizable({
     axis: 'x',
-    initial: 1100,
+    initial: 1080,
     min: 700,
     max: 1300,
     reverse: true

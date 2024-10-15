@@ -53,11 +53,11 @@ const App: React.FC = () => {
   
   return (
     <>
-      <MyAppBar onAddRow={() => handleAddRow(rows,setRows,selectedCell,setSelectedCell)} 
-      onDeleteRow={ () => handleDeleteRow(rows,setRows,selectedCell,setSelectedCell)}
-       onAddSubtasks={(numSubtasks) => handleAddSubtasks(rows,setRows,selectedCell, numSubtasks, setSelectedCell)} 
-       onIndentRow={()=>handleIndentTask(rows,setRows,selectedCell, setSelectedCell)}
-       onOutdentRow={()=>handleOutdentTask(rows,setRows,selectedCell, setSelectedCell)}/> {}
+      <MyAppBar onAddRow={() => handleAddRow(rows,setRows,selectedCell)} 
+      onDeleteRow={ () => handleDeleteRow(rows,setRows,selectedCell)}
+       onAddSubtasks={(numSubtasks) => handleAddSubtasks(rows,setRows,selectedCell, numSubtasks)} 
+       onIndentRow={()=>handleIndentTask(rows,setRows,selectedCell)}
+       onOutdentRow={()=>handleOutdentTask(rows,setRows,selectedCell)}/> {}
       <div id="main-content">
         <ResizableContainer>
           <div id="spreadsheet-container" className="spreadsheet-container">{gridElement}</div>

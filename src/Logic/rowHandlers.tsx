@@ -12,68 +12,58 @@ type SelectedCellState = {
   export const handleDeleteRow = (
     rows: Row[],
     setRows: React.Dispatch<React.SetStateAction<Row[]>>,
-    selectedCell: SelectedCellState | null,
-    setSelectedCell: React.Dispatch<React.SetStateAction<SelectedCellState | null>>
+    selectedCell: SelectedCellState | null
   ) => {
     const taskTree = new TaskTree(rows);
     if(selectedCell){
       taskTree.removeTask(selectedCell.rowIdx);
       setRows(taskTree.rows);
-      setSelectedCell(null);
     }
   };
 
   export const handleAddRow = (
     rows: Row[],
     setRows: React.Dispatch<React.SetStateAction<Row[]>>,
-    selectedCell: SelectedCellState | null,
-    setSelectedCell: React.Dispatch<React.SetStateAction<SelectedCellState | null>>
+    selectedCell: SelectedCellState | null
   ) => {
     const taskTree = new TaskTree(rows);
     if(selectedCell){
       taskTree.addTask(selectedCell.rowIdx);
       setRows(taskTree.rows);
-      setSelectedCell(null);
     }
   };
 
   export const handleIndentTask = (
     rows: Row[],
     setRows: React.Dispatch<React.SetStateAction<Row[]>>,
-    selectedCell: SelectedCellState | null,
-    setSelectedCell: React.Dispatch<React.SetStateAction<SelectedCellState | null>>
+    selectedCell: SelectedCellState | null
   ) => {
     const taskTree = new TaskTree(rows);
     if(selectedCell){
-      // taskTree.indentTask(selectedCell.rowNumber);
-      // setRows(taskTree.rows);
-      // setSelectedCell(null);
+      taskTree.indentTask(selectedCell.rowIdx);
+      setRows(taskTree.rows);
     }
   }
 
   export const handleOutdentTask = (
     rows: Row[],
     setRows: React.Dispatch<React.SetStateAction<Row[]>>,
-    selectedCell: SelectedCellState | null,
-    setSelectedCell: React.Dispatch<React.SetStateAction<SelectedCellState | null>>
+    selectedCell: SelectedCellState | null
   ) => {
     const taskTree = new TaskTree(rows);
     if(selectedCell){
-      // taskTree.outdentTask(selectedCell.rowIdx);
-      // setRows(taskTree.rows);
-      // setSelectedCell(null);
+      taskTree.outdentTask(selectedCell.rowIdx);
+      setRows(taskTree.rows);
     }
   }
 
   export const handleAddSubtasks = (rows: Row[],
     setRows: React.Dispatch<React.SetStateAction< Row[]>>,
     selectedCell: SelectedCellState | null,
-    numSubtasks: number,
-    setSelectedCell: React.Dispatch<React.SetStateAction<SelectedCellState | null>>) => {
+    numSubtasks: number) => {
     const taskTree = new TaskTree(rows);
     if(selectedCell){
       taskTree.addSubtasks(selectedCell.rowIdx, numSubtasks);
       setRows(taskTree.rows);
-      setSelectedCell(null);
     }
   }
