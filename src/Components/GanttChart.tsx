@@ -3,6 +3,7 @@ import mermaid from 'mermaid';
 
 const GanttChart = ({ rows }) => {
   const chartRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     mermaid.initialize({
       startOnLoad: true,
