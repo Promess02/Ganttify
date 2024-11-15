@@ -47,7 +47,7 @@ class TaskNode {
     for (let i = 0; i < numberOfChildren; i++) {
       const newIndex = `${baseIndex}.${startIndex + i}`;
       const newTask = new TaskNode(
-        generateRow(newIndex, this.row.start_date, this.row.worker_id, this.row.idx),
+        generateRow(newIndex, this.row.start_date, this.row.end_date, this.row.worker_id, this.row.idx),
         this.rowNumber + i + 1,
         this
       );
@@ -70,9 +70,11 @@ class TaskNode {
       child.children[i].updateChildIndexRecursive(newIndex);
       child.children[i].row.idx = childIndex;
       child.children[i].rowIdx = childIndex;
+      child.children[i].row.parent_idx = child.children[i].parent?.rowIdx || "";
       childIndex = incrementIndex(childIndex);
     }
     this.children.push(child);
+    child.row.parent_idx = this.rowIdx;
     this.orderChildrenByIndex();
   }
 
@@ -140,7 +142,7 @@ export class TaskTree {
         end_date: "",
         hours: "",
         worker_id: "",
-        predecessor: "",
+        parent_idx: "",
       },
       -1
     );
@@ -227,7 +229,7 @@ export class TaskTree {
 
       // Generate a new row with a new index and default values
       const newTask = new TaskNode(
-        generateRow(newIndex, parent.row.start_date, parent.row.worker_id, parent.row.idx),
+        generateRow(newIndex, parent.row.start_date, parent.row.end_date, parent.row.worker_id, parent.row.idx),
         rowNumberIndex + 1,
         parent
       );
@@ -336,6 +338,7 @@ export class TaskTree {
         node.rowIdx = newIndex;
         node.row.idx = newIndex;
         node.parent = grandParent;
+        node.row.parent_idx = grandParent.rowIdx;
         node.updateChildIndexRecursive(node.rowIdx);
         grandParent.children.splice(parentIndex+1,0, node);
         parent.children.splice(childIndex,1);

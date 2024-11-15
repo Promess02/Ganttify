@@ -7,7 +7,7 @@ import MyAppBar from './Components/MyAppBar.tsx';
 import { Row } from "./Model/Row.tsx";
 import { initialRows } from './Model/data.tsx';
 import { getColumns } from './Model/ColumArray.tsx';
-import { findDepth, rowKeyGetter, findRowIndexByIdx, updateTimeColumns } from './Util/UtilFunctions.tsx';
+import { findDepth, rowKeyGetter, findRowIndexByIdx, updateTimeColumns, getParentTaskId, sumParentHours } from './Util/UtilFunctions.tsx';
 import { handleAddRow, handleDeleteRow, handleAddSubtasks, handleIndentTask, handleOutdentTask } from './Logic/rowHandlers.tsx';
 
 type SelectedCellState = {
@@ -19,6 +19,7 @@ type SelectedCellState = {
 const App: React.FC = () => {
   const [rows, setRows] = useState<Row[]>(initialRows);
   const [selectedCell, setSelectedCell] = useState<SelectedCellState | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0); 
 
   const handleCellClick = (args: CellClickArgs<Row, unknown>) => {
     setSelectedCell({ rowIdx: `${args.row.idx}`,
@@ -27,22 +28,46 @@ const App: React.FC = () => {
   };
 
   const handleRowsChange = (updatedRows: Row[], { indexes }: { indexes: number[] }) => {
-    const newRows = updateTimeColumns(rows, updatedRows, { indexes });
+    const index = indexes[0];
+    const updatedRow = updatedRows[index];
+
+    if (updatedRow.hours !== rows[index].hours) {
+      updatedRows = updateHours(updatedRow.idx, updatedRows);
+    }
+    const newRows = updateTimeColumns(updatedRows, { indexes });
     setRows(newRows);
+    setRefreshKey(prevKey => prevKey + 1);
   };
 
   const updateRowData = (rowIdx, columnKey, date) => {
-    const updatedRows = rows.map((row, index) => {
-      if (index === rowIdx) {
-        return { ...row, [columnKey]: date };
-      }
-      return row;
-    });
-    setRows(updatedRows);
+    const updatedRows = [...rows];
+    let index = findRowIndexByIdx(rows, rowIdx);
+    updatedRows[index] = { ...updatedRows[index], [columnKey]: date }; 
+    let parentIndex = findRowIndexByIdx(updatedRows, getParentTaskId(rowIdx));
+    if (parentIndex !== -1 && columnKey === 'end_date') {
+      let parentDateValue = new Date(updatedRows[parentIndex].end_date).getTime();
+      let dateValue = new Date(date).getTime();
+
+      if (parentDateValue < dateValue) {
+        updatedRows[parentIndex] = { ...updatedRows[parentIndex], end_date: date }; 
+      } 
+    }
+
+    handleRowsChange(updatedRows, { indexes: [index] });
   };
+
+  const updateHours = (rowIdx, updatedRows) => {
+    let parentIndex = findRowIndexByIdx(updatedRows, getParentTaskId(rowIdx));
+    if (parentIndex !== -1) {
+      updatedRows = sumParentHours(updatedRows, getParentTaskId(rowIdx));
+    }
+
+    return updatedRows;
+  }
 
   const gridElement = (
     <DataGrid
+      key={refreshKey}
       rowKeyGetter={rowKeyGetter}
       columns={getColumns(updateRowData)}
       rows={rows}

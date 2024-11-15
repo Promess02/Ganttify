@@ -6,7 +6,7 @@ interface Row {
     end_date: string;
     hours: string;
     worker_id: string;
-    predecessor: string;
+    parent_idx: string;
   }
 
 export {Row};

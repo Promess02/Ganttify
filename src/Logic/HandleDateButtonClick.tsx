@@ -1,3 +1,3 @@
-export const handleDateButtonClick = (row, column) => {
+export const handleDateButtonClick = (row, column, date, setRows) => {
     
   };

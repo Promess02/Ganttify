@@ -23,29 +23,31 @@ import {Row} from './Row.tsx';
 //   { idx: 19, name: 'Task 19', duration: '7', start_date: '2025-02-27', hours: '34', worker_id: '2' }
 // ];
 
+const initialDate = new Date().toISOString().split('T')[0]
+
 const initialRows: Row[] = [
-  { idx: '1', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: ''},
-  { idx: '2', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
-  { idx: '3', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
-  { idx: '4', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
-  { idx: '5', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
-  { idx: '6', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
-  { idx: '7', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
-  { idx: '8', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
-  { idx: '9', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
-  { idx: '10', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
-  { idx: '11', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
-  { idx: '12', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
-  { idx: '13', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
-  { idx: '14', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
-  { idx: '15', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
-  { idx: '16', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
-  { idx: '17', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
-  { idx: '18', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
-  { idx: '19', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
-  { idx: '20', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
-  { idx: '21', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' },
-  { idx: '22', name: '', duration: '', start_date: '', hours: '', worker_id: '', predecessor: '', end_date: '' }
+  { idx: '1', name: '', duration: '', start_date: initialDate, hours: '', worker_id: '', parent_idx: '', end_date: initialDate},
+  { idx: '2', name: '', duration: '', start_date: initialDate, hours: '', worker_id: '', parent_idx: '', end_date: initialDate },
+  { idx: '3', name: '', duration: '', start_date: initialDate, hours: '', worker_id: '', parent_idx: '', end_date: initialDate },
+  { idx: '4', name: '', duration: '', start_date: initialDate, hours: '', worker_id: '', parent_idx: '', end_date: initialDate },
+  { idx: '5', name: '', duration: '', start_date: initialDate, hours: '', worker_id: '', parent_idx: '', end_date: initialDate },
+  { idx: '6', name: '', duration: '', start_date: initialDate, hours: '', worker_id: '', parent_idx: '', end_date: initialDate },
+  { idx: '7', name: '', duration: '', start_date: initialDate, hours: '', worker_id: '', parent_idx: '', end_date: initialDate },
+  { idx: '8', name: '', duration: '', start_date: initialDate, hours: '', worker_id: '', parent_idx: '', end_date: initialDate },
+  { idx: '9', name: '', duration: '', start_date: initialDate, hours: '', worker_id: '', parent_idx: '', end_date: initialDate },
+  { idx: '10', name: '', duration: '', start_date: initialDate, hours: '', worker_id: '', parent_idx: '', end_date: initialDate },
+  { idx: '11', name: '', duration: '', start_date: initialDate, hours: '', worker_id: '', parent_idx: '', end_date: initialDate },
+  { idx: '12', name: '', duration: '', start_date: initialDate, hours: '', worker_id: '', parent_idx: '', end_date: initialDate },
+  { idx: '13', name: '', duration: '', start_date: initialDate, hours: '', worker_id: '', parent_idx: '', end_date: initialDate },
+  { idx: '14', name: '', duration: '', start_date: initialDate, hours: '', worker_id: '', parent_idx: '', end_date: initialDate },
+  { idx: '15', name: '', duration: '', start_date: initialDate, hours: '', worker_id: '', parent_idx: '', end_date: initialDate },
+  { idx: '16', name: '', duration: '', start_date: initialDate, hours: '', worker_id: '', parent_idx: '', end_date: initialDate },
+  { idx: '17', name: '', duration: '', start_date: initialDate, hours: '', worker_id: '', parent_idx: '', end_date: initialDate },
+  { idx: '18', name: '', duration: '', start_date: initialDate, hours: '', worker_id: '', parent_idx: '', end_date: initialDate },
+  { idx: '19', name: '', duration: '', start_date: initialDate, hours: '', worker_id: '', parent_idx: '', end_date: initialDate },
+  { idx: '20', name: '', duration: '', start_date: initialDate, hours: '', worker_id: '', parent_idx: '', end_date: initialDate },
+  { idx: '21', name: '', duration: '', start_date: initialDate, hours: '', worker_id: '', parent_idx: '', end_date: initialDate },
+  { idx: '22', name: '', duration: '', start_date: initialDate, hours: '', worker_id: '', parent_idx: '', end_date: initialDate }
 ];
 
 export {initialRows};

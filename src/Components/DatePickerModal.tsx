@@ -5,7 +5,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 
 Modal.setAppElement('#root');
 
-const DatePickerModal = ({ isOpen, onRequestClose, selectedDate, onDateChange, onClickOutside }) => {
+const DatePickerModal = ({ isOpen, onRequestClose, selectedDate, onDateChange, onClickOutside, minDate, maxDate }) => {
   return (
     <Modal
       isOpen={isOpen}
@@ -28,6 +28,8 @@ const DatePickerModal = ({ isOpen, onRequestClose, selectedDate, onDateChange, o
         onClickOutside={onClickOutside}
         dateFormat={'yyyy-MM-dd'}
         inline
+        minDate={minDate}
+        maxDate={maxDate}
       />
     </Modal>
   );

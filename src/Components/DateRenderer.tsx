@@ -3,29 +3,38 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { formatDateToYYYYMMDD } from '../Util/UtilFunctions.tsx';
 import DatePickerModal from './DatePickerModal.tsx';
 
-const DateCellRenderer = ({ row, column, onDateChange, updateRowData }) => {
+const DateCellRenderer = ({ row, column, updateRowData }) => {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const givenDate = new Date(row[column.key]);
-    const initialDate = isNaN(new Date(row[column.key]?.toString()).getTime()) ? new Date() : givenDate; // check if string can be parsed to date else assign current system date
+    const initialDate = isNaN(new Date(row[column.key]?.toString()).getTime()) ? new Date() : givenDate;
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState(initialDate);
+    const [minDate, setMinDate] = useState<Date | null>(null);
+    const [maxDate, setMaxDate] = useState<Date | null>(null);
 
   const handleButtonClick = () => {
     setShowDatePicker(true);
     setIsModalOpen(true);
+    if (column.key === 'start_date') {
+      setMaxDate(new Date(row.end_date));
+      setMinDate(null);
+    } else if (column.key === 'end_date') {
+      setMinDate(new Date(row.start_date));
+      setMaxDate(null);
+    }
   };
-
+  
   const handleDateChange = (date) => {
     if (date instanceof Date && !isNaN(date.getTime())) {
     const formattedDate = formatDateToYYYYMMDD(date);
     setSelectedDate(date);
     setIsModalOpen(false);
     setShowDatePicker(false);
-    onDateChange(row, column, formattedDate, updateRowData);
+    updateRowData(row.idx, column.key, formattedDate);
     } else {
       const currentDate = new Date();
       const formattedDate = formatDateToYYYYMMDD(currentDate);
-      onDateChange(row, column, formattedDate, updateRowData);
+      updateRowData(row.idx, column.key, formattedDate);
     }
   };
 
@@ -40,6 +49,8 @@ const DateCellRenderer = ({ row, column, onDateChange, updateRowData }) => {
           selectedDate={selectedDate}
           onDateChange={handleDateChange}
           onClickOutside={() => setShowDatePicker(false)}
+          minDate={minDate}
+          maxDate={maxDate}
         />
       )}
     </div>
