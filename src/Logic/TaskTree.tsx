@@ -143,6 +143,7 @@ export class TaskTree {
         hours: "",
         worker_id: "",
         parent_idx: "",
+        previous: ""
       },
       -1
     );

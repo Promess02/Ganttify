@@ -29,6 +29,7 @@ export function generateRow(idx: string, start_date: string, end_date: string, w
       hours: "",
       worker_id,
       parent_idx: parent_id,
+      previous: ""
     };
   }
 

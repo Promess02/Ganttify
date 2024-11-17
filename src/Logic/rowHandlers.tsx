@@ -82,3 +82,11 @@ type SelectedCellState = {
       resetSelectedCell(selectedCell.rowIdx, taskTree.rows, setSelectedCell);
     }
   }
+
+  export const handleDefineResource = (
+    rows: Row[],
+    setRows: React.Dispatch<React.SetStateAction<Row[]>>,
+    selectedCell: SelectedCellState | null,
+    setSelectedCell: React.Dispatch<React.SetStateAction<SelectedCellState | null>>
+  ) => {
+  }

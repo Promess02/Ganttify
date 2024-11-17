@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { AppBar, Box, Button, IconButton, Toolbar, TextField } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import MenuIcon from '@mui/icons-material/Menu';
-
 interface MyAppBarProps {
     onAddRow: () => void;
     onDeleteRow: () => void;
     onAddSubtasks: (numSubtasks: number) => void;
     onIndentRow: () => void;
     onOutdentRow: () => void;
+    onHandleResources: () => void;
   }
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
@@ -21,7 +21,7 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
     },
   }));
 
-const MyAppBar: React.FC<MyAppBarProps> = ({ onAddRow, onDeleteRow, onAddSubtasks, onIndentRow, onOutdentRow}) => {
+const MyAppBar: React.FC<MyAppBarProps> = ({ onAddRow, onDeleteRow, onAddSubtasks, onIndentRow, onOutdentRow, onHandleResources}) => {
     const [numSubtasks, setNumSubtasks] = useState(1);
 
     const handleNumSubtasksChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,7 +54,7 @@ const MyAppBar: React.FC<MyAppBarProps> = ({ onAddRow, onDeleteRow, onAddSubtask
             />
             <Button color="inherit" onClick={onIndentRow}>Indent Task</Button>
             <Button color="inherit" onClick={onOutdentRow}>Outdent Task</Button>
-            <Button color="inherit">Define Resources</Button>
+            <Button color="inherit" onClick={onHandleResources}>Define Resources</Button>
             <Button color="inherit">Link Resource</Button>
             <Button color="inherit">Unlink Resource</Button>
             <Button color="inherit">Generate Report</Button>
