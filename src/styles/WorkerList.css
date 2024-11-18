@@ -91,3 +91,30 @@
     font-size: 20px;
     cursor: pointer;
   }
+
+  .worker-list h2 {
+    margin-bottom: 20px;
+  }
+  
+  .worker-list ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .worker-list li {
+    padding: 15px;
+    margin-bottom: 10px;
+    border: 2px solid grey;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  
+  .worker-list li.selected-worker {
+    border-color: #007bff;
+  }
+  
+  .worker-list li:hover {
+    background-color: #e6f7ff;
+  }

@@ -12,6 +12,7 @@ import { handleAddRow, handleDeleteRow, handleAddSubtasks, handleIndentTask, han
 import ErrorMessage from './Components/ErrorMessage.tsx';
 import WorkerList from './Components/WorkerList.tsx';
 import { Worker } from './Model/Worker.tsx';
+import LinkResourcePicker from './Components/LinkResourcePicker.tsx';
 
 type SelectedCellState = {
   rowIdx: string;
@@ -25,12 +26,15 @@ const App: React.FC = () => {
   const [refreshKey, setRefreshKey] = useState(0); 
   const [error, setError] = useState<string | null>(null);
   const [showWorkerList, setShowWorkerList] = useState(false);
+  const [showLinkResource, setShowLinkResource] = useState(false);
   const [workers, setWorkers] = useState<Worker[]>([]);
+  const [selectedWorkerId, setSelectedWorkerId] = useState<string | null>(null);
 
   const handleCellClick = (args: CellClickArgs<Row, unknown>) => {
     setSelectedCell({ rowIdx: `${args.row.idx}`,
        rowNumber: findRowIndexByIdx(rows, args.row.idx),
         depth: findDepth(`${args.row.idx}`)});
+    setSelectedWorkerId(args.row.worker_id);
   };
 
   const handleRowsChange = (updatedRows: Row[], { indexes }: { indexes: number[] }) => {
@@ -150,6 +154,30 @@ const App: React.FC = () => {
     setWorkers(workers.map(worker => (worker.worker_id === modifiedWorker.worker_id ? modifiedWorker : worker)));
   };
 
+  const handleLinkResource = () => {
+    setShowLinkResource(!showLinkResource);
+  };
+
+  const handlePickWorker = (worker_id: string) => {
+    if (selectedCell) {
+      const updatedRows = [...rows];
+      const rowIndex = selectedCell.rowNumber;
+      updatedRows[rowIndex] = { ...updatedRows[rowIndex], worker_id };
+      setRows(updatedRows);
+      setRefreshKey(prevKey => prevKey + 1);
+    }
+  };
+
+  const handleUnlinkResource = () => {
+    if (selectedCell) {
+      const updatedRows = [...rows];
+      const rowIndex = selectedCell.rowNumber;
+      updatedRows[rowIndex] = { ...updatedRows[rowIndex], worker_id: '' };
+      setRows(updatedRows);
+      setRefreshKey(prevKey => prevKey + 1);
+    }
+  };
+
   const gridElement = (
     <DataGrid
       key={refreshKey}
@@ -172,7 +200,9 @@ const App: React.FC = () => {
        onAddSubtasks={(numSubtasks) => handleAddSubtasks(rows,setRows,selectedCell, numSubtasks, setSelectedCell)} 
        onIndentRow={()=>handleIndentTask(rows,setRows,selectedCell, setSelectedCell)}
        onOutdentRow={()=>handleOutdentTask(rows,setRows,selectedCell, setSelectedCell)}
-       onHandleResources={handleDefineResource}/> {}
+       onHandleResources={handleDefineResource}
+       onLinkResource={handleLinkResource}
+       onUnlinkResource={handleUnlinkResource}/> {}
       <div id="main-content">
         <ResizableContainer>
           <div id="spreadsheet-container" className="spreadsheet-container">{gridElement}</div>
@@ -190,6 +220,13 @@ const App: React.FC = () => {
           onAddWorker={handleAddWorker}
           onDeleteWorker={handleDeleteWorker}
           onModifyWorker={handleModifyWorker}
+        />
+        <LinkResourcePicker
+          isOpen={showLinkResource}
+          onRequestClose={() => setShowLinkResource(false)}
+          workers={workers}
+          onPickWorker={handlePickWorker}
+          selectedWorkerId={selectedWorkerId}
         />
         <ErrorMessage message={error} onClose={handleCloseError} />
       </div>

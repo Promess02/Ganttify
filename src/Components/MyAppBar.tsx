@@ -9,6 +9,8 @@ interface MyAppBarProps {
     onIndentRow: () => void;
     onOutdentRow: () => void;
     onHandleResources: () => void;
+    onLinkResource: () => void;
+    onUnlinkResource: () => void;
   }
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
@@ -21,7 +23,7 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
     },
   }));
 
-const MyAppBar: React.FC<MyAppBarProps> = ({ onAddRow, onDeleteRow, onAddSubtasks, onIndentRow, onOutdentRow, onHandleResources}) => {
+const MyAppBar: React.FC<MyAppBarProps> = ({ onAddRow, onDeleteRow, onAddSubtasks, onIndentRow, onOutdentRow, onHandleResources, onLinkResource, onUnlinkResource}) => {
     const [numSubtasks, setNumSubtasks] = useState(1);
 
     const handleNumSubtasksChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,8 +57,8 @@ const MyAppBar: React.FC<MyAppBarProps> = ({ onAddRow, onDeleteRow, onAddSubtask
             <Button color="inherit" onClick={onIndentRow}>Indent Task</Button>
             <Button color="inherit" onClick={onOutdentRow}>Outdent Task</Button>
             <Button color="inherit" onClick={onHandleResources}>Define Resources</Button>
-            <Button color="inherit">Link Resource</Button>
-            <Button color="inherit">Unlink Resource</Button>
+            <Button color="inherit" onClick={onLinkResource}>Link Resource</Button>
+            <Button color="inherit" onClick={onUnlinkResource}>Unlink Resource</Button>
             <Button color="inherit">Generate Report</Button>
           </Box>
       </StyledToolbar>
