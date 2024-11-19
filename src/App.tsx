@@ -13,6 +13,10 @@ import ErrorMessage from './Components/ErrorMessage.tsx';
 import WorkerList from './Components/WorkerList.tsx';
 import { Worker } from './Model/Worker.tsx';
 import LinkResourcePicker from './Components/LinkResourcePicker.tsx';
+import PDFDocument from 'pdfkit/js/pdfkit.standalone.js';
+// import PDFDocument from 'pdfkit';
+import blobStream from 'blob-stream';
+import '@fontsource/roboto/400.css'
 
 type SelectedCellState = {
   rowIdx: string;
@@ -178,6 +182,144 @@ const App: React.FC = () => {
     }
   };
 
+  const handleGenerateReport = () => {
+  // Calculate the starting and ending dates of the project
+  const startDate = rows.reduce((earliest, row) => {
+    const rowStartDate = new Date(row.start_date);
+    return rowStartDate < earliest ? rowStartDate : earliest;
+  }, new Date(rows[0].start_date));
+
+  const endDate = rows.reduce((latest, row) => {
+    const rowEndDate = new Date(row.end_date);
+    return rowEndDate > latest ? rowEndDate : latest;
+  }, new Date(rows[0].end_date));
+
+  // Calculate the total amount of hours
+  const totalHours = rows.reduce((sum, row) => {
+    const depth = row.idx.split('.').length;
+    if (depth === 1) {
+      const hours = parseFloat(row.hours);
+      if(!isNaN(hours)){
+        return sum + hours;
+      }
+    }
+    return sum;
+  }, 0);
+
+  // List the workers working on the project
+  const workersOnProject = workers.filter(worker =>
+    rows.some(row => row.worker_id === worker.worker_id)
+  );
+
+  // Calculate the total cost of the project
+  const totalCost = rows.reduce((sum, row) => {
+    const worker = workers.find(worker => worker.worker_id === row.worker_id);
+    if (worker) {
+      return sum + worker.pay_per_hour * parseFloat(row.hours);
+    }
+    return sum;
+  }, 0);
+
+  // Generate lists of tasks for each worker
+  const tasksByWorker = workersOnProject.map(worker => {
+    const tasks = rows
+      .filter(row => row.worker_id === worker.worker_id)
+      .map(row => ({
+        task_name: row.name,
+        start_date: row.start_date,
+        end_date: row.end_date,
+        hours: row.hours
+      }));
+    const totalHours = tasks.reduce((sum, task) => sum + parseFloat(task.hours), 0);
+    const totalPay = totalHours * worker.pay_per_hour;
+    return {
+      worker,
+      tasks,
+      totalHours,
+      totalPay
+    };
+  });
+
+  const fetchFont = async (url: string): Promise<ArrayBuffer> => {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to load font: ${response.statusText}`);
+    }
+    return await response.arrayBuffer();
+  };
+
+  // Generate the report
+  const generateReport = async () => {
+    const report = {
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0],
+      totalHours,
+      workersOnProject,
+      totalCost,
+      tasksByWorker
+    };
+
+    const fontBuffer = await fetchFont('/Roboto-Medium.ttf');
+
+      // Create a new PDF document
+      const doc = new PDFDocument();
+
+      // Create a stream to blob
+      const stream = doc.pipe(blobStream());
+
+      doc.registerFont('Roboto', fontBuffer);
+
+      doc.font('Roboto');
+    
+      // Add title
+      doc.fontSize(18).text('Project Report', { align: 'center' });
+
+      // Add project dates
+      doc.moveDown();
+      doc.fontSize(12).text(`Start Date: ${report.startDate}`);
+      doc.text(`End Date: ${report.endDate}`);
+    
+      // Add total hours
+      doc.moveDown();
+      doc.text(`Total Hours: ${report.totalHours}`);
+    
+      // Add total cost
+      doc.moveDown();
+      doc.text(`Total Cost: $${report.totalCost.toFixed(2)}`);
+    
+      // Add workers list
+      doc.moveDown();
+      doc.text('Workers on Project:');
+      report.workersOnProject.forEach((worker) => {
+        doc.text(`${worker.name} ${worker.surname} - ${worker.job_name}`);
+      });
+    
+      // Add tasks by worker
+      doc.moveDown();
+      report.tasksByWorker.forEach((workerReport) => {
+        doc.moveDown();
+        doc.text(`Tasks for ${workerReport.worker.name} ${workerReport.worker.surname}:`);
+        workerReport.tasks.forEach((task) => {
+          doc.text(
+            `Task name: ${task.task_name}, Start Date: ${task.start_date}, End Date: ${task.end_date}, Hours: ${task.hours}`
+          );
+        });
+      });
+    
+      // Finalize the PDF and end the stream
+      doc.end();
+    
+      // When the stream is finished, create a blob and trigger the download
+      stream.on('finish', function() {
+        const blob = stream.toBlobURL('application/pdf');
+        window.open(blob);
+      });
+    }; 
+
+    // Call the generateReport function
+    generateReport().catch(error => console.error(error));
+  };
+
   const gridElement = (
     <DataGrid
       key={refreshKey}
@@ -202,7 +344,8 @@ const App: React.FC = () => {
        onOutdentRow={()=>handleOutdentTask(rows,setRows,selectedCell, setSelectedCell)}
        onHandleResources={handleDefineResource}
        onLinkResource={handleLinkResource}
-       onUnlinkResource={handleUnlinkResource}/> {}
+       onUnlinkResource={handleUnlinkResource}
+       onGenerateReport={handleGenerateReport}/> {}
       <div id="main-content">
         <ResizableContainer>
           <div id="spreadsheet-container" className="spreadsheet-container">{gridElement}</div>
