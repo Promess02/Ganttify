@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AppBar, Box, Button, IconButton, Toolbar, TextField } from '@mui/material';
+import { AppBar, Box, Button, IconButton, TextField, Toolbar, Drawer, List, ListItem, ListItemText, Typography, Divider } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import MenuIcon from '@mui/icons-material/Menu';
 interface MyAppBarProps {
@@ -12,6 +12,7 @@ interface MyAppBarProps {
     onLinkResource: () => void;
     onUnlinkResource: () => void;
     onGenerateReport: () => void;
+    onLogout: () => void;
   }
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
@@ -24,12 +25,52 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
     },
   }));
 
-const MyAppBar: React.FC<MyAppBarProps> = ({ onAddRow, onDeleteRow, onAddSubtasks, onIndentRow, onOutdentRow, onHandleResources, onLinkResource, onUnlinkResource, onGenerateReport}) => {
+const MyAppBar: React.FC<MyAppBarProps> = ({ onAddRow, onDeleteRow, onAddSubtasks, onIndentRow, onOutdentRow, onHandleResources, onLinkResource, onUnlinkResource, onGenerateReport, onLogout}) => {
     const [numSubtasks, setNumSubtasks] = useState(1);
+    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [showProjects, setShowProjects] = useState(false);
 
     const handleNumSubtasksChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setNumSubtasks(Number(event.target.value));
       };
+
+    const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
+        if (event.type === 'keydown' && ((event as React.KeyboardEvent).key === 'Tab' || (event as React.KeyboardEvent).key === 'Shift')) {
+          return;
+        }
+        setDrawerOpen(open);
+      };
+
+    const handleProjectClick = (projectName: string) => {
+        console.log(`Project clicked: ${projectName}`);
+        // Implement project change logic here
+      };
+
+    const toggleProjects = () => {
+        setShowProjects(!showProjects);
+      }; 
+
+      const drawerContent = (
+        <Box
+          sx={{ width: 500 }}
+          role="presentation"
+        >
+          <Typography variant="h6" sx={{ p: 2 }}>User Email: user@example.com</Typography>
+          <Typography variant="h6" sx={{ p: 2 }}>Project Name: Current Project</Typography>
+          <Divider />
+          <List>
+            <ListItem button onClick={toggleProjects}>
+              <ListItemText primary="Show All Projects" />
+            </ListItem>
+            {showProjects && ['Project 1', 'Project 2', 'Project 3'].map((project) => (
+              <ListItem button key={project} onClick={() => handleProjectClick(project)}>
+                <ListItemText primary={project} />
+              </ListItem>
+            ))}
+          </List>
+          <Button onClick={onLogout} color='inherit'>Log out</Button>
+        </Box>
+      );
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -41,6 +82,7 @@ const MyAppBar: React.FC<MyAppBarProps> = ({ onAddRow, onDeleteRow, onAddSubtask
           color="inherit"
           aria-label="open drawer"
           sx={{ mr: 2 }}
+          onClick={toggleDrawer(true)}
         >
           <MenuIcon />
         </IconButton>
@@ -64,6 +106,13 @@ const MyAppBar: React.FC<MyAppBarProps> = ({ onAddRow, onDeleteRow, onAddSubtask
           </Box>
       </StyledToolbar>
     </AppBar>
+    <Drawer
+        anchor="left"
+        open={drawerOpen}
+        onClose={toggleDrawer(false)}
+      >
+        {drawerContent}
+      </Drawer>
   </Box>
   );
 };

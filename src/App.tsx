@@ -14,6 +14,7 @@ import WorkerList from './Components/WorkerList.tsx';
 import { Worker } from './Model/Worker.tsx';
 import LinkResourcePicker from './Components/LinkResourcePicker.tsx';
 import PDFDocument from 'pdfkit/js/pdfkit.standalone.js';
+import AuthScreen from './Components/AuthScreen.tsx';
 // import PDFDocument from 'pdfkit';
 import blobStream from 'blob-stream';
 import '@fontsource/roboto/400.css'
@@ -33,6 +34,15 @@ const App: React.FC = () => {
   const [showLinkResource, setShowLinkResource] = useState(false);
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [selectedWorkerId, setSelectedWorkerId] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const handleLoginSuccess = () => {
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+  };
 
   const handleCellClick = (args: CellClickArgs<Row, unknown>) => {
     setSelectedCell({ rowIdx: `${args.row.idx}`,
@@ -336,44 +346,52 @@ const App: React.FC = () => {
   );
   
   return (
-    <>
-      <MyAppBar onAddRow={() => handleAddRow(rows,setRows,selectedCell, setSelectedCell)} 
-      onDeleteRow={ () => handleDeleteRow(rows,setRows,selectedCell, setSelectedCell)}
-       onAddSubtasks={(numSubtasks) => handleAddSubtasks(rows,setRows,selectedCell, numSubtasks, setSelectedCell)} 
-       onIndentRow={()=>handleIndentTask(rows,setRows,selectedCell, setSelectedCell)}
-       onOutdentRow={()=>handleOutdentTask(rows,setRows,selectedCell, setSelectedCell)}
-       onHandleResources={handleDefineResource}
-       onLinkResource={handleLinkResource}
-       onUnlinkResource={handleUnlinkResource}
-       onGenerateReport={handleGenerateReport}/> {}
-      <div id="main-content">
-        <ResizableContainer>
-          <div id="spreadsheet-container" className="spreadsheet-container">{gridElement}</div>
-          <div id="gantt-chart-container" className="fill-grid">
-            <GanttChart rows={rows} />
+    <div>
+      {isLoggedIn ? (
+        <>
+         <MyAppBar onAddRow={() => handleAddRow(rows,setRows,selectedCell, setSelectedCell)} 
+         onDeleteRow={ () => handleDeleteRow(rows,setRows,selectedCell, setSelectedCell)}
+          onAddSubtasks={(numSubtasks) => handleAddSubtasks(rows,setRows,selectedCell, numSubtasks, setSelectedCell)} 
+          onIndentRow={()=>handleIndentTask(rows,setRows,selectedCell, setSelectedCell)}
+          onOutdentRow={()=>handleOutdentTask(rows,setRows,selectedCell, setSelectedCell)}
+          onHandleResources={handleDefineResource}
+          onLinkResource={handleLinkResource}
+          onUnlinkResource={handleUnlinkResource}
+          onGenerateReport={handleGenerateReport}
+          onLogout={handleLogout}
+        />
+         <div id="main-content">
+           <ResizableContainer>
+             <div id="spreadsheet-container" className="spreadsheet-container">{gridElement}</div>
+             <div id="gantt-chart-container" className="fill-grid">
+               <GanttChart rows={rows} />
+             </div>
+           </ResizableContainer>
+           <WorkerList
+             isOpen={showWorkerList}
+             onRequestClose={() => {
+               setShowWorkerList(false);
+               setWorkers(workers);
+             }}
+             workers={workers}
+             onAddWorker={handleAddWorker}
+             onDeleteWorker={handleDeleteWorker}
+             onModifyWorker={handleModifyWorker}
+           />
+           <LinkResourcePicker
+             isOpen={showLinkResource}
+             onRequestClose={() => setShowLinkResource(false)}
+             workers={workers}
+             onPickWorker={handlePickWorker}
+             selectedWorkerId={selectedWorkerId}
+           />
+           <ErrorMessage message={error} onClose={handleCloseError} />
           </div>
-        </ResizableContainer>
-        <WorkerList
-          isOpen={showWorkerList}
-          onRequestClose={() => {
-            setShowWorkerList(false);
-            setWorkers(workers);
-          }}
-          workers={workers}
-          onAddWorker={handleAddWorker}
-          onDeleteWorker={handleDeleteWorker}
-          onModifyWorker={handleModifyWorker}
-        />
-        <LinkResourcePicker
-          isOpen={showLinkResource}
-          onRequestClose={() => setShowLinkResource(false)}
-          workers={workers}
-          onPickWorker={handlePickWorker}
-          selectedWorkerId={selectedWorkerId}
-        />
-        <ErrorMessage message={error} onClose={handleCloseError} />
+          </> 
+      ) : (
+        <AuthScreen onLoginSuccess={handleLoginSuccess} />
+      )}
       </div>
-    </>
   );
 };
 
