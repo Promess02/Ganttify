@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState} from 'react';
 import { Box, List, ListItem, ListItemText, Typography } from '@mui/material';
 import axios from 'axios';
 
@@ -10,34 +10,12 @@ interface Project {
 }
 
 interface ProjectPickerProps {
+    projects: Project[];
     onProjectSelect: (projectId: number, tasks: any[]) => void;
 }
 
-const ProjectPicker: React.FC<ProjectPickerProps> = ({ onProjectSelect }) => {
-    const [projects, setProjects] = useState<Project[]>([]);
+const ProjectPicker: React.FC<ProjectPickerProps> = ({ projects, onProjectSelect }) => {
     const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        const fetchProjects = async () => {
-            try {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    throw new Error('No token found');
-                }
-
-                const response = await axios.get('/projects', {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
-                setProjects(response.data);
-            } catch (error) {
-                setError(error.message);
-            }
-        };
-
-        fetchProjects();
-    }, []);
 
     const handleProjectClick = async (projectId: number) => {
         try {

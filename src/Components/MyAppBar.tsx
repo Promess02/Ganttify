@@ -2,7 +2,16 @@ import React, { useState } from 'react';
 import { AppBar, Box, Button, IconButton, TextField, Toolbar, Drawer, List, ListItem, ListItemText, Typography, Divider } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import MenuIcon from '@mui/icons-material/Menu';
+
+interface Project {
+    project_id: number;
+    project_name: string;
+}
+
 interface MyAppBarProps {
+    project_name: string;
+    user_email: string;
+    projects: Project[];
     onAddRow: () => void;
     onDeleteRow: () => void;
     onAddSubtasks: (numSubtasks: number) => void;
@@ -25,7 +34,7 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
     },
   }));
 
-const MyAppBar: React.FC<MyAppBarProps> = ({ onAddRow, onDeleteRow, onAddSubtasks, onIndentRow, onOutdentRow, onHandleResources, onLinkResource, onUnlinkResource, onGenerateReport, onLogout}) => {
+const MyAppBar: React.FC<MyAppBarProps> = ({project_name, user_email, projects, onAddRow, onDeleteRow, onAddSubtasks, onIndentRow, onOutdentRow, onHandleResources, onLinkResource, onUnlinkResource, onGenerateReport, onLogout}) => {
     const [numSubtasks, setNumSubtasks] = useState(1);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [showProjects, setShowProjects] = useState(false);
@@ -41,8 +50,8 @@ const MyAppBar: React.FC<MyAppBarProps> = ({ onAddRow, onDeleteRow, onAddSubtask
         setDrawerOpen(open);
       };
 
-    const handleProjectClick = (projectName: string) => {
-        console.log(`Project clicked: ${projectName}`);
+    const handleProjectClick = (projectId: number) => {
+        console.log(`Project clicked: ${projectId}`);
         // Implement project change logic here
       };
 
@@ -55,18 +64,22 @@ const MyAppBar: React.FC<MyAppBarProps> = ({ onAddRow, onDeleteRow, onAddSubtask
           sx={{ width: 500 }}
           role="presentation"
         >
-          <Typography variant="h6" sx={{ p: 2 }}>User Email: user@example.com</Typography>
-          <Typography variant="h6" sx={{ p: 2 }}>Project Name: Current Project</Typography>
+          <Typography variant="h6" sx={{ p: 2 }}>User Email: {user_email}</Typography>
+          <Typography variant="h6" sx={{ p: 2 }}>Project Name: {project_name}</Typography>
           <Divider />
           <List>
             <ListItem button onClick={toggleProjects}>
               <ListItemText primary="Show All Projects" />
             </ListItem>
-            {showProjects && ['Project 1', 'Project 2', 'Project 3'].map((project) => (
-              <ListItem button key={project} onClick={() => handleProjectClick(project)}>
-                <ListItemText primary={project} />
-              </ListItem>
-            ))}
+            {showProjects && (
+                <List>
+                    {projects.map((project) => (
+                        <ListItem button key={project.project_id} onClick={() => handleProjectClick(project.project_id)}>
+                            <ListItemText primary={project.project_name} />
+                        </ListItem>
+                    ))}
+                </List>
+            )}
           </List>
           <Button onClick={onLogout} color='inherit'>Log out</Button>
         </Box>

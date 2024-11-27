@@ -3,7 +3,7 @@ import { Box, Button, TextField, Tabs, Tab } from '@mui/material';
 import axios from 'axios';
 
 interface AuthScreenProps {
-    onLoginSuccess: () => void;
+    onLoginSuccess: (user_email:string) => void;
 }
 
 axios.defaults.baseURL = 'http://localhost:4000';
@@ -25,7 +25,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
             const response = await axios.post('/login', { email, password });
             localStorage.setItem('token', response.data);
             console.log(response.data);
-            onLoginSuccess();
+            onLoginSuccess('placeholder_email');
         } catch (error) {
             console.error(error);
         }
@@ -36,7 +36,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
             const response = await axios.post('/register', { email, name, surname, password });
             localStorage.setItem('token', response.data);
             console.log(response.data);
-            onLoginSuccess();
+            onLoginSuccess('placeholder_email');
         } catch (error) {
             console.error(error);
         }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DataGrid, { CellClickArgs } from 'react-data-grid';
 import GanttChart from './Components/GanttChart.tsx';
 import 'react-data-grid/lib/styles.css';
@@ -15,6 +15,7 @@ import { Worker } from './Model/Worker.tsx';
 import LinkResourcePicker from './Components/LinkResourcePicker.tsx';
 import PDFDocument from 'pdfkit/js/pdfkit.standalone.js';
 import AuthScreen from './Components/AuthScreen.tsx';
+import axios from 'axios';
 // import PDFDocument from 'pdfkit';
 import blobStream from 'blob-stream';
 import '@fontsource/roboto/400.css'
@@ -37,9 +38,13 @@ const App: React.FC = () => {
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [selectedWorkerId, setSelectedWorkerId] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [project_name, setProjectName] = useState<string>('');
+  const [user_email, setUserEmail] = useState<string>('');
 
-  const handleLoginSuccess = () => {
+  const handleLoginSuccess = (user_email: string) => {
     setIsLoggedIn(true);
+    setUserEmail(user_email);
   };
 
   const handleLogout = () => {
@@ -48,10 +53,35 @@ const App: React.FC = () => {
     setRows([]);
   };
 
+  useEffect(() => {
+    // Fetch projects when the component mounts
+    const fetchProjects = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No token found');
+            }
+
+            const response = await axios.get('/projects', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            setProjects(response.data);
+        } catch (error) {
+            setError(error.message);
+        }
+    };
+
+    if (isLoggedIn) {
+        fetchProjects();
+    }
+}, [isLoggedIn]);
+
   const handleProjectSelect = (projectId: number, tasks: any[]) => {
     setSelectedProjectId(projectId); 
     tasks = tasks.map((task) => ({
-      idx: task.task_id,
+      idx: String(task.task_id),
       name: task.name,
       duration: task.days,
       start_date: task.start_date,
@@ -62,6 +92,7 @@ const App: React.FC = () => {
       previous: task.previous
     }));
     setRows(tasks);
+    setProjectName(projects.find(project => project.project_id === projectId).project_name);
     setRefreshKey(prevKey => prevKey + 1);
 };
 
@@ -371,7 +402,7 @@ const App: React.FC = () => {
       {isLoggedIn ? (
         selectedProjectId ? (
         <>
-         <MyAppBar onAddRow={() => handleAddRow(rows,setRows,selectedCell, setSelectedCell)} 
+         <MyAppBar project_name = {project_name} user_email = {user_email} projects={projects} onAddRow={() => handleAddRow(rows,setRows,selectedCell, setSelectedCell)} 
          onDeleteRow={ () => handleDeleteRow(rows,setRows,selectedCell, setSelectedCell)}
           onAddSubtasks={(numSubtasks) => handleAddSubtasks(rows,setRows,selectedCell, numSubtasks, setSelectedCell)} 
           onIndentRow={()=>handleIndentTask(rows,setRows,selectedCell, setSelectedCell)}
@@ -411,7 +442,7 @@ const App: React.FC = () => {
           </div>
           </> 
         ) : (
-          <ProjectPicker onProjectSelect={handleProjectSelect} />
+          <ProjectPicker projects={projects} onProjectSelect={handleProjectSelect} />
         )
       ) : (
         <AuthScreen onLoginSuccess={handleLoginSuccess} />
