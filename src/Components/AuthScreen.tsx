@@ -23,6 +23,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     const handleLogin = async () => {
         try {
             const response = await axios.post('/login', { email, password });
+            localStorage.setItem('token', response.data);
             console.log(response.data);
             onLoginSuccess();
         } catch (error) {
@@ -33,6 +34,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     const handleRegister = async () => {
         try {
             const response = await axios.post('/register', { email, name, surname, password });
+            localStorage.setItem('token', response.data);
             console.log(response.data);
             onLoginSuccess();
         } catch (error) {

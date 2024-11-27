@@ -18,6 +18,7 @@ import AuthScreen from './Components/AuthScreen.tsx';
 // import PDFDocument from 'pdfkit';
 import blobStream from 'blob-stream';
 import '@fontsource/roboto/400.css'
+import ProjectPicker from './Components/ProjectPicker.tsx';
 
 type SelectedCellState = {
   rowIdx: string;
@@ -28,6 +29,7 @@ type SelectedCellState = {
 const App: React.FC = () => {
   const [rows, setRows] = useState<Row[]>(initialRows);
   const [selectedCell, setSelectedCell] = useState<SelectedCellState | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [refreshKey, setRefreshKey] = useState(0); 
   const [error, setError] = useState<string | null>(null);
   const [showWorkerList, setShowWorkerList] = useState(false);
@@ -42,7 +44,26 @@ const App: React.FC = () => {
 
   const handleLogout = () => {
     setIsLoggedIn(false);
+    setSelectedProjectId(null);
+    setRows([]);
   };
+
+  const handleProjectSelect = (projectId: number, tasks: any[]) => {
+    setSelectedProjectId(projectId); 
+    tasks = tasks.map((task) => ({
+      idx: task.task_id,
+      name: task.name,
+      duration: task.days,
+      start_date: task.start_date,
+      end_date: task.end_date,
+      hours: task.hours,
+      worker_id: task.worker,
+      parent_idx: '',
+      previous: task.previous
+    }));
+    setRows(tasks);
+    setRefreshKey(prevKey => prevKey + 1);
+};
 
   const handleCellClick = (args: CellClickArgs<Row, unknown>) => {
     setSelectedCell({ rowIdx: `${args.row.idx}`,
@@ -348,6 +369,7 @@ const App: React.FC = () => {
   return (
     <div>
       {isLoggedIn ? (
+        selectedProjectId ? (
         <>
          <MyAppBar onAddRow={() => handleAddRow(rows,setRows,selectedCell, setSelectedCell)} 
          onDeleteRow={ () => handleDeleteRow(rows,setRows,selectedCell, setSelectedCell)}
@@ -364,7 +386,7 @@ const App: React.FC = () => {
            <ResizableContainer>
              <div id="spreadsheet-container" className="spreadsheet-container">{gridElement}</div>
              <div id="gantt-chart-container" className="fill-grid">
-               <GanttChart rows={rows} />
+               <GanttChart key={refreshKey} rows={rows} />
              </div>
            </ResizableContainer>
            <WorkerList
@@ -388,6 +410,9 @@ const App: React.FC = () => {
            <ErrorMessage message={error} onClose={handleCloseError} />
           </div>
           </> 
+        ) : (
+          <ProjectPicker onProjectSelect={handleProjectSelect} />
+        )
       ) : (
         <AuthScreen onLoginSuccess={handleLoginSuccess} />
       )}
