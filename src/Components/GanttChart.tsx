@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import mermaid from 'mermaid';
 
-const GanttChart = ({ rows }) => {
+const GanttChart = ({ rows, project_name }) => {
   const chartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,7 +32,7 @@ const GanttChart = ({ rows }) => {
         const ganttChart = `
           gantt
           dateFormat  YYYY-MM-DD
-          title A Gantt Diagram
+          title ${project_name}
 
           ${ganttTasks}
         `;

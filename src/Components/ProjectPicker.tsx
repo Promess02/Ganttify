@@ -1,5 +1,5 @@
 import React, { useState} from 'react';
-import { Box, List, ListItem, ListItemText, Typography } from '@mui/material';
+import { Box, List, ListItem, ListItemText, Typography, Divider } from '@mui/material';
 import axios from 'axios';
 
 axios.defaults.baseURL = 'http://localhost:4000';
@@ -11,10 +11,11 @@ interface Project {
 
 interface ProjectPickerProps {
     projects: Project[];
-    onProjectSelect: (projectId: number, tasks: any[]) => void;
+    onProjectSelect: (projectId: number, tasks: any[], workers: any[]) => void;
+    onCreateNewProject: () => void;
 }
 
-const ProjectPicker: React.FC<ProjectPickerProps> = ({ projects, onProjectSelect }) => {
+const ProjectPicker: React.FC<ProjectPickerProps> = ({ projects, onProjectSelect, onCreateNewProject }) => {
     const [error, setError] = useState<string | null>(null);
 
     const handleProjectClick = async (projectId: number) => {
@@ -24,12 +25,19 @@ const ProjectPicker: React.FC<ProjectPickerProps> = ({ projects, onProjectSelect
                 throw new Error('No token found');
             }
 
-            const response = await axios.get(`/projects/${projectId}/tasks`, {
+            const responseTasks = await axios.get(`/projects/${projectId}/tasks`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
-            onProjectSelect(projectId, response.data);
+
+            const responseWorkers = await axios.get(`/projects/${projectId}/workers`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            onProjectSelect(projectId, responseTasks.data, responseWorkers.data);
         } catch (error) {
             setError(error.message);
         }
@@ -37,16 +45,22 @@ const ProjectPicker: React.FC<ProjectPickerProps> = ({ projects, onProjectSelect
 
     return (
         <Box sx={{ width: '100%', maxWidth: 360, mx: 'auto', mt: 4 }}>
-            <Typography variant="h6" gutterBottom>
-                Select a Project
-            </Typography>
-            {error && <Typography color="error">{error}</Typography>}
+            {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
             <List>
                 {projects.map((project) => (
-                    <ListItem button key={project.project_id} onClick={() => handleProjectClick(project.project_id)}>
-                        <ListItemText primary={project.project_name} />
-                    </ListItem>
+                    <React.Fragment key={project.project_id}>
+                        <ListItem button onClick={() => handleProjectClick(project.project_id)} sx={{ borderBottom: '1px solid #ccc' }}>
+                            <ListItemText 
+                                primary={project.project_name} 
+                                primaryTypographyProps={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#007bff' }} 
+                            />
+                        </ListItem>
+                        <Divider />
+                    </React.Fragment>
                 ))}
+            <ListItem button onClick={onCreateNewProject} sx={{ borderBottom: '1px solid #ccc' }}>
+                <ListItemText primary="Create a new project" primaryTypographyProps={{ fontSize: '1rem', fontWeight: 'bold' }} />
+            </ListItem>
             </List>
         </Box>
     );

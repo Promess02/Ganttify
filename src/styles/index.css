@@ -146,3 +146,44 @@ html, body, #root {
   filter: blur(5px);
   background-color: #adadad;
 }
+
+.new-project-creator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.new-project-creator form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+}
+
+.new-project-creator label {
+  margin-bottom: 5px;
+}
+
+.new-project-creator input,
+.new-project-creator textarea {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+
+.new-project-creator button {
+  padding: 10px;
+  border: none;
+  border-radius: 3px;
+  background-color: #007bff;
+  color: #fff;
+  cursor: pointer;
+}
+
+.new-project-creator button:hover {
+  background-color: #0056b3;
+}

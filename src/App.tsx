@@ -13,13 +13,15 @@ import ErrorMessage from './Components/ErrorMessage.tsx';
 import WorkerList from './Components/WorkerList.tsx';
 import { Worker } from './Model/Worker.tsx';
 import LinkResourcePicker from './Components/LinkResourcePicker.tsx';
-import PDFDocument from 'pdfkit/js/pdfkit.standalone.js';
+import PDFDocument, { set } from 'pdfkit/js/pdfkit.standalone.js';
 import AuthScreen from './Components/AuthScreen.tsx';
 import axios from 'axios';
 // import PDFDocument from 'pdfkit';
 import blobStream from 'blob-stream';
 import '@fontsource/roboto/400.css'
 import ProjectPicker from './Components/ProjectPicker.tsx';
+import NewProjectCreator from './Components/NewProjectCreator.tsx';
+import { Project } from './Model/Project.tsx';
 
 type SelectedCellState = {
   rowIdx: string;
@@ -38,9 +40,11 @@ const App: React.FC = () => {
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [selectedWorkerId, setSelectedWorkerId] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [project_name, setProjectName] = useState<string>('');
   const [user_email, setUserEmail] = useState<string>('');
+  const [newProjectCreator, setNewProjectCreator] = useState<boolean>(false);
+  const [projectCurrency, setProjectCurrency] = useState<'USD' | 'GBP' | 'PLN' | 'EUR'>('USD');
 
   const handleLoginSuccess = (user_email: string) => {
     setIsLoggedIn(true);
@@ -78,10 +82,10 @@ const App: React.FC = () => {
     }
 }, [isLoggedIn]);
 
-  const handleProjectSelect = (projectId: number, tasks: any[]) => {
+  const handleProjectSelect = (projectId: number, tasks: any[], workers: any[]) => {
     setSelectedProjectId(projectId); 
     tasks = tasks.map((task) => ({
-      idx: String(task.task_id),
+      idx: String(task.task_index),
       name: task.name,
       duration: task.days,
       start_date: task.start_date,
@@ -92,7 +96,18 @@ const App: React.FC = () => {
       previous: task.previous
     }));
     setRows(tasks);
-    setProjectName(projects.find(project => project.project_id === projectId).project_name);
+    workers = workers.map((worker) => ({
+      worker_id: worker.worker_id,
+      name: worker.name,
+      surname: worker.surname,
+      job_name: worker.job,
+      pay_per_hour: worker.pay
+    }));
+    setWorkers(workers);
+    const selectedProject = projects.find(project => project.project_id === projectId);
+    if (selectedProject) {
+      setProjectName(selectedProject.project_name);
+    }
     setRefreshKey(prevKey => prevKey + 1);
 };
 
@@ -101,6 +116,10 @@ const App: React.FC = () => {
        rowNumber: findRowIndexByIdx(rows, args.row.idx),
         depth: findDepth(`${args.row.idx}`)});
     setSelectedWorkerId(args.row.worker_id);
+  };
+
+  const handleChangeProjectCurrency = (currency: 'USD' | 'GBP' | 'PLN' | 'EUR') => {
+    setProjectCurrency(currency);
   };
 
   const handleRowsChange = (updatedRows: Row[], { indexes }: { indexes: number[] }) => {
@@ -224,6 +243,43 @@ const App: React.FC = () => {
     setShowLinkResource(!showLinkResource);
   };
 
+  const showNewProjectCreator = () => {
+    setNewProjectCreator(true);
+  }
+
+  const closeNewProjectCreator = () => {
+    setNewProjectCreator(false);
+  }
+
+  const handleCreateNewProject = (project: string, project_start: string) => {
+    setProjectName(project);
+    const newRows = new Array<Row>();
+    for (let i = 1; i < 21; i++) {
+      newRows.push({ idx: String(i), name: 'Task ' + String(i), duration: '1', start_date: project_start, end_date: project_start, hours: '1', worker_id: '', parent_idx: '', previous: '' });
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('No token found');
+      return;
+    }
+
+    axios.post('/projects', {
+      projectName: project,
+      projectDescription: '',
+    }, {
+      headers: {
+      Authorization: `Bearer ${token}`
+      }
+    }).then(response => {
+      const newProject = response.data;
+      setProjects([...projects, newProject]);
+      setSelectedProjectId(newProject.project_id);
+    }).catch(error => setError(error.message));
+
+    setRows(newRows);
+  };
+
   const handlePickWorker = (worker_id: string) => {
     if (selectedCell) {
       const updatedRows = [...rows];
@@ -242,6 +298,37 @@ const App: React.FC = () => {
       setRows(updatedRows);
       setRefreshKey(prevKey => prevKey + 1);
     }
+  };
+
+  const handleSaveProject = () => {
+    const token = localStorage.getItem('token');
+    const body = {
+      project_name: project_name,
+      project_description: '',
+      tasks: rows.map(row => ({
+        task_id: rows.findIndex(r => r.idx === row.idx) + 1,
+        task_index: row.idx,
+        project_id: selectedProjectId,
+        name: row.name,
+        days: row.duration,
+        start_date: row.start_date,
+        end_date: row.end_date,
+        hours: row.hours,
+        worker: row.worker_id,
+        parent: row.parent_idx,
+        previous: row.previous
+      })),
+    }
+    if (!token) {
+      setError('No token found');
+      return;
+    }
+
+    axios.put(`/projects/${selectedProjectId}`, body, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }).catch(error => setError(error.message));
   };
 
   const handleGenerateReport = () => {
@@ -386,7 +473,7 @@ const App: React.FC = () => {
     <DataGrid
       key={refreshKey}
       rowKeyGetter={rowKeyGetter}
-      columns={getColumns(updateRowData)}
+      columns={getColumns(rows, workers, updateRowData)}
       rows={rows}
       defaultColumnOptions={{
         resizable: true
@@ -402,7 +489,7 @@ const App: React.FC = () => {
       {isLoggedIn ? (
         selectedProjectId ? (
         <>
-         <MyAppBar project_name = {project_name} user_email = {user_email} projects={projects} onAddRow={() => handleAddRow(rows,setRows,selectedCell, setSelectedCell)} 
+         <MyAppBar project_name = {project_name} user_email = {user_email} projects={projects} project_currency={projectCurrency} onProjectSelect={handleProjectSelect} onAddRow={() => handleAddRow(rows,setRows,selectedCell, setSelectedCell)}
          onDeleteRow={ () => handleDeleteRow(rows,setRows,selectedCell, setSelectedCell)}
           onAddSubtasks={(numSubtasks) => handleAddSubtasks(rows,setRows,selectedCell, numSubtasks, setSelectedCell)} 
           onIndentRow={()=>handleIndentTask(rows,setRows,selectedCell, setSelectedCell)}
@@ -412,12 +499,15 @@ const App: React.FC = () => {
           onUnlinkResource={handleUnlinkResource}
           onGenerateReport={handleGenerateReport}
           onLogout={handleLogout}
+          onSaveProject={handleSaveProject}
+          onCreateNewProject={showNewProjectCreator}
+          handleChangeProjectCurrency={handleChangeProjectCurrency}
         />
          <div id="main-content">
            <ResizableContainer>
              <div id="spreadsheet-container" className="spreadsheet-container">{gridElement}</div>
              <div id="gantt-chart-container" className="fill-grid">
-               <GanttChart key={refreshKey} rows={rows} />
+               <GanttChart project_name={project_name} key={refreshKey} rows={rows} />
              </div>
            </ResizableContainer>
            <WorkerList
@@ -438,11 +528,15 @@ const App: React.FC = () => {
              onPickWorker={handlePickWorker}
              selectedWorkerId={selectedWorkerId}
            />
+           <NewProjectCreator isOpen={newProjectCreator} onRequestClose={closeNewProjectCreator} onCreateProject={handleCreateNewProject} />
            <ErrorMessage message={error} onClose={handleCloseError} />
           </div>
           </> 
         ) : (
-          <ProjectPicker projects={projects} onProjectSelect={handleProjectSelect} />
+          <div>
+          <NewProjectCreator isOpen={newProjectCreator} onRequestClose={closeNewProjectCreator} onCreateProject={handleCreateNewProject} />
+          <ProjectPicker projects={projects} onProjectSelect={handleProjectSelect} onCreateNewProject={showNewProjectCreator} />
+          </div>
         )
       ) : (
         <AuthScreen onLoginSuccess={handleLoginSuccess} />
