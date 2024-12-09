@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import 'react-datepicker/dist/react-datepicker.css';
 import { formatDateToYYYYMMDD } from '../Util/UtilFunctions.tsx';
+import { FaCalendarAlt } from 'react-icons/fa';
 import DatePickerModal from './DatePickerModal.tsx';
 
-const DateCellRenderer = ({ row, column, updateRowData }) => {
+const DateCellRenderer = ({ row, isHighlighted, column, updateRowData }) => {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const givenDate = new Date(row[column.key]);
     const initialDate = isNaN(new Date(row[column.key]?.toString()).getTime()) ? new Date() : givenDate;
@@ -38,10 +39,19 @@ const DateCellRenderer = ({ row, column, updateRowData }) => {
     }
   };
 
+  const cellStyle = { 
+    fontWeight: isHighlighted ? 'bold' : 'normal', 
+    color: isHighlighted ? '#0056b3' : 'inherit', 
+    fontSize: '14px',
+    marginRight: '2px'
+  };
+
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <span style={{ marginRight: '2px' }}>{formatDateToYYYYMMDD(selectedDate)}</span>
-      <button onClick={handleButtonClick} style={{ marginLeft: '2px' }}>^</button>
+      <span style={cellStyle}>{formatDateToYYYYMMDD(selectedDate)}</span>
+      <button onClick={handleButtonClick} style={{ marginLeft: '2px', background: 'none', border: 'none', cursor: 'pointer' }}>
+        <FaCalendarAlt style={{ fontSize: '16px', color: '#0056b3' }} />
+      </button>
       {showDatePicker && (
         <DatePickerModal
           isOpen={isModalOpen}

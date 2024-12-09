@@ -4,11 +4,12 @@ import '../styles/WorkerList.css';
 
 interface WorkerItemProps {
   worker: Worker;
+  currency: string;
   onDelete: (worker_id: string) => void;
   onModify: (worker: Worker) => void;
 }
 
-const WorkerItem: React.FC<WorkerItemProps> = ({ worker, onDelete, onModify }) => {
+const WorkerItem: React.FC<WorkerItemProps> = ({ worker, currency, onDelete, onModify }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedWorker, setEditedWorker] = useState(worker);
 
@@ -38,7 +39,7 @@ const WorkerItem: React.FC<WorkerItemProps> = ({ worker, onDelete, onModify }) =
           <span>{worker.name}</span>
           <span>{worker.surname}</span>
           <span>{worker.job_name}</span>
-          <span>{worker.pay_per_hour}</span>
+          <span>{worker.pay_per_hour + currency}</span>
           <button onClick={() => setIsEditing(true)}>Edit</button>
           <button onClick={() => onDelete(worker.worker_id)}>Delete</button>
         </>

@@ -11,11 +11,12 @@ interface Project {
 
 interface ProjectPickerProps {
     projects: Project[];
+    handleCloseDrawer: () => void;
     onProjectSelect: (projectId: number, tasks: any[], workers: any[]) => void;
     onCreateNewProject: () => void;
 }
 
-const ProjectPicker: React.FC<ProjectPickerProps> = ({ projects, onProjectSelect, onCreateNewProject }) => {
+const ProjectPicker: React.FC<ProjectPickerProps> = ({ projects, handleCloseDrawer, onProjectSelect, onCreateNewProject }) => {
     const [error, setError] = useState<string | null>(null);
 
     const handleProjectClick = async (projectId: number) => {
@@ -43,6 +44,11 @@ const ProjectPicker: React.FC<ProjectPickerProps> = ({ projects, onProjectSelect
         }
     };
 
+    const handleCreateNewProject = () => {
+        handleCloseDrawer();
+        onCreateNewProject();
+    };
+
     return (
         <Box sx={{ width: '100%', maxWidth: 360, mx: 'auto', mt: 4 }}>
             {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
@@ -58,7 +64,7 @@ const ProjectPicker: React.FC<ProjectPickerProps> = ({ projects, onProjectSelect
                         <Divider />
                     </React.Fragment>
                 ))}
-            <ListItem button onClick={onCreateNewProject} sx={{ borderBottom: '1px solid #ccc' }}>
+            <ListItem button onClick={handleCreateNewProject} sx={{ borderBottom: '1px solid #ccc' }}>
                 <ListItemText primary="Create a new project" primaryTypographyProps={{ fontSize: '1rem', fontWeight: 'bold' }} />
             </ListItem>
             </List>

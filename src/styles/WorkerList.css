@@ -118,3 +118,41 @@
   .worker-list li:hover {
     background-color: #e6f7ff;
   }
+  .pay-per-hour-input .input-container {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  .pay-per-hour-input input {
+    padding-right: 50px; /* Adjust based on the width of the currency symbol */
+    -moz-appearance: textfield; /* Hide default number input buttons in Firefox */
+  }
+  
+  .pay-per-hour-input input::-webkit-outer-spin-button,
+  .pay-per-hour-input input::-webkit-inner-spin-button {
+    -webkit-appearance: none; /* Hide default number input buttons in WebKit browsers */
+    margin: 0;
+  }
+  
+  .pay-per-hour-input .currency-symbol {
+    pointer-events: none; /* Prevent the currency symbol from blocking input clicks */
+    margin: 0% 2px;
+  }
+  
+  .pay-per-hour-input .increment-button,
+  .pay-per-hour-input .decrement-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 4px;
+    margin: 0 5px;
+  }
+  
+  .pay-per-hour-input .increment-button:hover,
+  .pay-per-hour-input .decrement-button:hover {
+    background-color: #0056b3;
+  }

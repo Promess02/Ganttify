@@ -31,16 +31,22 @@ const renderWorker = (rows: Row[], workers: Worker[], row: Row ) => {
   </span> : '';
 }
 
+const isHighlighted = (row: Row, rows: Row[]) => {
+  const hasSubtasks = rows.some(r => r.idx.startsWith(`${row.idx}.`));
+  return hasSubtasks;
+}
+
 export const getColumns = (rows: Row[], workers: Worker[],updateRowData: (rowIdx: number, columnKey: string, date: Date) => void): readonly Column<Row>[] => [
   { key: 'idx', name: 'Index', editable: false, resizable: true, width: '55px', renderEditCell: textEditor,
     renderCell: ({ row }) => renderCellWithBold(rows, row, 'idx')},
-  { key: 'name', name: 'Name', editable: true, width: '145px', renderEditCell: textEditor, renderCell: ({ row }) => renderCellWithBold(rows, row, 'idx') },
+  { key: 'name', name: 'Name', editable: true, width: '145px', renderEditCell: textEditor, renderCell: ({ row }) => renderCellWithBold(rows, row, 'name') },
   { key: 'duration', name: 'Days', editable: true, width: '50px', renderEditCell: NumericEditor, renderCell: ({ row }) => renderCellWithBold(rows, row, 'duration')},
   {
     key: 'start_date', name: 'Start Date', editable: false, width: '110px', renderEditCell: textEditor,
     renderCell: (props) => (
       <DateRenderer
         row={props.row}
+        isHighlighted={isHighlighted(props.row, rows)}
         column={props.column}
         updateRowData={updateRowData}
       />
@@ -51,6 +57,7 @@ export const getColumns = (rows: Row[], workers: Worker[],updateRowData: (rowIdx
     renderCell: (props) => (
       <DateRenderer
         row={props.row}
+        isHighlighted={isHighlighted(props.row, rows)}
         column={props.column}
         updateRowData={updateRowData}
       />

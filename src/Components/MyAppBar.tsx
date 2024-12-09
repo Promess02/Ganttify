@@ -14,7 +14,7 @@ import LinkIcon from '@mui/icons-material/Link';
 import LinkOffIcon from '@mui/icons-material/LinkOff';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import SaveIcon from '@mui/icons-material/Save';
-
+import DescriptionIcon from '@mui/icons-material/Description';
 interface Project {
   project_id: number;
   project_name: string;
@@ -38,6 +38,7 @@ interface MyAppBarProps {
   onLogout: () => void;
   onSaveProject: () => void;
   onCreateNewProject: () => void;
+  onAddTaskDescription: () => void;
   handleChangeProjectCurrency: (currency: 'USD' | 'GBP' | 'PLN' | 'EUR') => void;
 }
 
@@ -51,7 +52,7 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   },
 }));
 
-const MyAppBar: React.FC<MyAppBarProps> = ({ project_name, user_email, projects, project_currency, onProjectSelect, onAddRow, onDeleteRow, onAddSubtasks, onIndentRow, onOutdentRow, onHandleResources, onLinkResource, onUnlinkResource, onGenerateReport, onLogout, onSaveProject, onCreateNewProject, handleChangeProjectCurrency }) => {
+const MyAppBar: React.FC<MyAppBarProps> = ({ project_name, user_email, projects, project_currency, onProjectSelect, onAddRow, onDeleteRow, onAddSubtasks, onIndentRow, onOutdentRow, onHandleResources, onLinkResource, onUnlinkResource, onGenerateReport, onLogout, onSaveProject, onCreateNewProject, onAddTaskDescription, handleChangeProjectCurrency }) => {
   const [numSubtasks, setNumSubtasks] = useState(1);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showProjects, setShowProjects] = useState(false);
@@ -61,7 +62,7 @@ const MyAppBar: React.FC<MyAppBarProps> = ({ project_name, user_email, projects,
   };
 
   const changeCurrency = (event: SelectChangeEvent<string>) => {
-    handleChangeProjectCurrency(event.target.value as string);
+    handleChangeProjectCurrency(event.target.value as 'USD' | 'GBP' | 'PLN' | 'EUR');
   };
 
   const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
@@ -74,6 +75,15 @@ const MyAppBar: React.FC<MyAppBarProps> = ({ project_name, user_email, projects,
   const toggleProjects = () => {
     setShowProjects(!showProjects);
   };
+
+  const handleCloseDrawer = () => {
+    setDrawerOpen(false)
+  }
+
+  const handleSaveProject = () => {
+    onSaveProject();
+    setDrawerOpen(false);
+  }
 
   const drawerContent = (
     <Box
@@ -104,7 +114,7 @@ const MyAppBar: React.FC<MyAppBarProps> = ({ project_name, user_email, projects,
             <ListItemText primary={showProjects?"Hide projects":"Show all projects"} primaryTypographyProps={{ fontSize: '1rem', fontWeight: 'bold' }} />
           </ListItem>
           {showProjects && (
-            <ProjectPicker projects={projects} onProjectSelect={onProjectSelect} onCreateNewProject={onCreateNewProject}/>
+            <ProjectPicker projects={projects} handleCloseDrawer={handleCloseDrawer} onProjectSelect={onProjectSelect} onCreateNewProject={onCreateNewProject}/>
           )}
         </List>
         <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: '#333' }}>
@@ -122,9 +132,10 @@ const MyAppBar: React.FC<MyAppBarProps> = ({ project_name, user_email, projects,
             ))}
           </Select>
       </Box>
-      <Box>
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <Divider sx={{ mt: 2, mb: 2 }} />
-        <Button onClick={onLogout} color="inherit" variant="outlined" fullWidth sx={{ fontWeight: 'bold', borderColor: '#007bff', color: '#007bff' }}>
+        <Button color="inherit" variant='contained' onClick={handleSaveProject} startIcon={<SaveIcon />} sx={{ fontWeight: 'bold', width: '80%', BorderColor: '#97cff7', color: '#1a92e7', padding: '15px', borderRadius: '5px' }}>Save Project</Button>
+        <Button onClick={onLogout} color="inherit" variant="outlined" sx={{ fontWeight: 'bold', borderColor: '#007bff', color: '#007bff', width: '80%', mt: 2 }}>
           Log out
         </Button>
       </Box>
@@ -166,7 +177,7 @@ const MyAppBar: React.FC<MyAppBarProps> = ({ project_name, user_email, projects,
             <Button className='bar-buttons' color="inherit" onClick={onLinkResource} startIcon={<LinkIcon/>}>Link Resource</Button>
             <Button className='bar-buttons' color="inherit" onClick={onUnlinkResource} startIcon={<LinkOffIcon/>}>Unlink Resource</Button>
             <Button className='bar-buttons' color="inherit" onClick={onGenerateReport} startIcon={<AssessmentIcon/>}>Generate Report</Button>
-            <Button className='bar-buttons' color="inherit" onClick={onSaveProject} startIcon={<SaveIcon/>}>Save Project</Button>
+            <Button className='bar-buttons' color="inherit" onClick={onAddTaskDescription} startIcon={<DescriptionIcon/>}>Change description</Button>
           </Box>
         </StyledToolbar>
       </AppBar>

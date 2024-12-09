@@ -10,6 +10,7 @@ Modal.setAppElement('#root');
 
 interface WorkerListProps {
     isOpen: boolean;
+    currency: 'USD' | 'EUR' | 'GBP' | 'PLN';
     onRequestClose: () => void;
     workers: Worker[];
     onAddWorker: (worker: Worker) => void;
@@ -17,7 +18,7 @@ interface WorkerListProps {
     onModifyWorker: (worker: Worker) => void;
   }
 
-  const WorkerList: React.FC<WorkerListProps> = ({ isOpen, onRequestClose, workers, onAddWorker, onDeleteWorker, onModifyWorker }) => {
+  const WorkerList: React.FC<WorkerListProps> = ({ isOpen, currency, onRequestClose, workers, onAddWorker, onDeleteWorker, onModifyWorker }) => {
     const [localWorkers, setLocalWorkers] = useState<Worker[]>([]);
     const [newWorker, setNewWorker] = useState<Worker>({
       worker_id: '',
@@ -26,6 +27,8 @@ interface WorkerListProps {
       job_name: '',
       pay_per_hour: 0,
     });
+
+    const currencySymbol = currency === 'USD' ? '$' : currency === 'EUR' ? '€' : currency === 'PLN' ? 'zł' : '£';
 
   useEffect(() => {
     setLocalWorkers(workers);
@@ -54,6 +57,14 @@ interface WorkerListProps {
     setLocalWorkers(workers);
   };
 
+  const handleIncrementDecrement = (value) => {
+    const newVal = Number(newWorker.pay_per_hour) + value;
+    setNewWorker((prevWorker) => ({
+      ...prevWorker,
+      pay_per_hour: newVal > 0 ? newVal : 0,
+    }));
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -71,11 +82,24 @@ interface WorkerListProps {
           <input name="name" placeholder="Name" value={newWorker.name} onChange={handleChange} />
           <input name="surname" placeholder="Surname" value={newWorker.surname} onChange={handleChange} />
           <input name="job_name" placeholder="Job Name" value={newWorker.job_name} onChange={handleChange} />
-          <input name="pay_per_hour" type="number" placeholder="Pay per Hour" value={newWorker.pay_per_hour} onChange={handleChange} />
+          <div className="pay-per-hour-input">
+          <div className="input-container">
+            <input
+              name="pay_per_hour"
+              type="number"
+              placeholder="Pay per Hour"
+              value={newWorker.pay_per_hour}
+              onChange={handleChange}
+            />
+            <span className="currency-symbol">{currencySymbol}</span>
+            <button className="decrement-button" onClick={() => handleIncrementDecrement(-1)}>-</button>
+            <button className="increment-button" onClick={() => handleIncrementDecrement(1)}>+</button>
+          </div>
+        </div>
           <button onClick={handleAddWorker}>Add Worker</button>
         </div>
         {workers.map(worker => (
-          <WorkerItem key={worker.worker_id} worker={worker} onDelete={handleDeleteWorker} onModify={handleModifyWorker} />
+          <WorkerItem key={worker.worker_id} currency={currencySymbol} worker={worker} onDelete={handleDeleteWorker} onModify={handleModifyWorker} />
         ))}
       </div>
     </Modal>
