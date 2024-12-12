@@ -134,7 +134,7 @@ const MyAppBar: React.FC<MyAppBarProps> = ({ project_name, user_email, projects,
       </Box>
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <Divider sx={{ mt: 2, mb: 2 }} />
-        <Button color="inherit" variant='contained' onClick={handleSaveProject} startIcon={<SaveIcon />} sx={{ fontWeight: 'bold', width: '80%', BorderColor: '#97cff7', color: '#1a92e7', padding: '15px', borderRadius: '5px' }}>Save Project</Button>
+        <Button color='inherit' variant='outlined' onClick={handleSaveProject} startIcon={<SaveIcon />} sx={{ fontWeight: 'bold', width: '80%', BorderColor: '#1a92e7', color: '#1a92e7', padding: '15px', borderRadius: '5px' }}>Save Project</Button>
         <Button onClick={onLogout} color="inherit" variant="outlined" sx={{ fontWeight: 'bold', borderColor: '#007bff', color: '#007bff', width: '80%', mt: 2 }}>
           Log out
         </Button>

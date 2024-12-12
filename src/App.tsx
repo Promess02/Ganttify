@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import DataGrid, { CellClickArgs } from 'react-data-grid';
 import GanttChart from './Components/GanttChart.tsx';
+import "./styles/App.css";
 import 'react-data-grid/lib/styles.css';
 import ResizableContainer from './Components/ResizableContainer.tsx';
 import MyAppBar from './Components/MyAppBar.tsx';
+import { Fab, Box, Menu, MenuItem } from '@mui/material';
+import ViewModuleIcon from '@mui/icons-material/ViewModule';
+import ViewListIcon from '@mui/icons-material/ViewList';
+import ShowChartIcon from '@mui/icons-material/ShowChart';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { Row } from "./Model/Row.tsx";
 import { initialRows } from './Model/data.tsx';
 import { getColumns } from './Model/ColumArray.tsx';
@@ -17,7 +23,6 @@ import PDFDocument, { set } from 'pdfkit/js/pdfkit.standalone.js';
 import AuthScreen from './Components/AuthScreen.tsx';
 import axios from 'axios';
 import { htmlToText } from 'html-to-text';
-// import PDFDocument from 'pdfkit';
 import blobStream from 'blob-stream';
 import '@fontsource/roboto/400.css'
 import ProjectPicker from './Components/ProjectPicker.tsx';
@@ -55,8 +60,12 @@ const App: React.FC = () => {
   const [taskDescriptions, setTaskDescriptions] = useState<Description[]>([]);
   const [showTaskDescription, setShowTaskDescription] = useState<boolean>(false);
   const [infoType, setInfoType] = useState<boolean>(false);
+  const [view, setView] = useState('showChartAndGrid'); // Possible values: 'showChartAndGrid', 'onlyGrid', 'onlyChart'
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [projectsFetched, setProjectsFetched] = useState(false); // New state variable
 
   const handleLoginSuccess = (user_email: string) => {
+    localStorage.setItem('isLoggedIn', 'true');
     setIsLoggedIn(true);
     setUserEmail(user_email);
   };
@@ -65,15 +74,22 @@ const App: React.FC = () => {
     setIsLoggedIn(false);
     setSelectedProjectId(null);
     setRows([]);
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('selectedProjectId');
+    localStorage.removeItem('token');
   };
 
   useEffect(() => {
-    // Fetch projects when the component mounts
-    const fetchProjects = async () => {
+    const fetchProjectsAndSelectedProject = async () => {
+      if (projectsFetched){
+        return;
+      }
       try {
         const token = localStorage.getItem('token');
         if (!token) {
-          throw new Error('No token found');
+          setInfoType(true);
+          setError('No token found');
+          return;
         }
 
         const response = await axios.get('/projects', {
@@ -82,19 +98,60 @@ const App: React.FC = () => {
           }
         });
         setProjects(response.data);
+        setIsLoggedIn(true);
+        setProjectsFetched(true);
+
+        const storedProjectId = localStorage.getItem('selectedProjectId');
+        if (storedProjectId) {
+          await fetchProject(Number(storedProjectId));
+          setSelectedProjectId(Number(storedProjectId));
+        }
       } catch (error) {
         setInfoType(true);
-        setError(error.message);
+        setError('fetch error');
       }
     };
 
-    if (isLoggedIn) {
-      fetchProjects();
+    const storedIsLoggedIn = localStorage.getItem('isLoggedIn');
+    if (storedIsLoggedIn === 'true') {
+      fetchProjectsAndSelectedProject();
     }
-  }, [isLoggedIn]);
+  }, []);
+
+  useEffect(() => {
+    if (projectsFetched && selectedProjectId !== null) {
+      fetchProject(selectedProjectId);
+    }
+  }, [projectsFetched, selectedProjectId]);
+
+  const fetchProject = async (projectId: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      const responseTasks = await axios.get(`/projects/${projectId}/tasks`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const responseWorkers = await axios.get(`/projects/${projectId}/workers`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      handleProjectSelect(projectId, responseTasks.data, responseWorkers.data);
+    } catch (error) {
+      setError('project select error');
+    }
+  };
 
   const handleProjectSelect = (projectId: number, tasks: any[], workers: any[]) => {
     setSelectedProjectId(projectId);
+    localStorage.setItem('selectedProjectId', projectId.toString());
     tasks = tasks.map((task) => ({
       idx: String(task.task_index),
       name: task.name,
@@ -120,6 +177,19 @@ const App: React.FC = () => {
       setProjectName(selectedProject.project_name);
     }
     setRefreshKey(prevKey => prevKey + 1);
+  };
+
+  const handleClickAnchor = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseAnchor = () => {
+    setAnchorEl(null);
+  };
+
+  const handleMenuItemClick = (viewOption: string) => {
+    setView(viewOption);
+    handleCloseAnchor();
   };
 
   const handleCellClick = (args: CellClickArgs<Row, unknown>) => {
@@ -161,7 +231,7 @@ const App: React.FC = () => {
       setRefreshKey(prevKey => prevKey + 1);
     } catch (error) {
       setInfoType(true);
-      setError(error.message);
+      setError('Error updating rows');
     }
   };
 
@@ -183,7 +253,7 @@ const App: React.FC = () => {
       handleRowsChange(updatedRows, { indexes: [index] });
     } catch (error) {
       setInfoType(true);
-      setError(error.message);
+      setError('Error updating row data');
     }
 
   };
@@ -270,7 +340,7 @@ const App: React.FC = () => {
     setProjectName(project);
     const newRows = new Array<Row>();
     for (let i = 1; i < 21; i++) {
-      newRows.push({ idx: String(i), name: 'Task ' + String(i), duration: '1', start_date: project_start, end_date: project_start, hours: '1', worker_id: '', parent_idx: '', previous: '' });
+      newRows.push({ idx: String(i), name: 'Task ' + String(i), duration: '1', start_date: project_start, end_date: project_start, hours: '1', worker_id: '', parent_idx: '', previous: '', description: '' });
     }
 
     const token = localStorage.getItem('token');
@@ -293,7 +363,7 @@ const App: React.FC = () => {
       setSelectedProjectId(newProject.project_id);
       setInfoType(false);
       setError('Project created successfully');
-    }).catch(error => setError(error.message));
+    }).catch(error => setError('Saving project failed'));
 
     setRows(newRows);
   };
@@ -329,6 +399,22 @@ const App: React.FC = () => {
         return [...prevDescriptions, { task_id: task_idx, description: description }];
       }
     });
+    const updatedRows = rows.map(row => {
+      if (row.idx === task_idx) {
+        const plainTextDescription = htmlToText(description, {
+          wordwrap: 130,
+          tags: {
+            'a': { options: { hideLinkHrefIfSameAsText: true } },
+            'b': { format: 'bold' },
+            'i': { format: 'italic' },
+            'u': { format: 'underline' },
+          }
+        });
+        return { ...row, description: plainTextDescription };
+      }
+      return row;
+    });
+    setRows(updatedRows);
   };
 
   const handleInitDescription = () => {
@@ -374,7 +460,7 @@ const App: React.FC = () => {
       setInfoType(false);
       setError('Project saved successfully');
     })
-    .catch(error => setError(error.message));
+    .catch(error => setError('Saving project failed'));
   };
 
   const handleGenerateReport = () => {
@@ -564,7 +650,7 @@ const App: React.FC = () => {
     <DataGrid
       key={refreshKey}
       rowKeyGetter={rowKeyGetter}
-      columns={getColumns(rows, workers, updateRowData)}
+      columns={getColumns(rows, view, workers, updateRowData)}
       rows={rows}
       defaultColumnOptions={{
         resizable: true
@@ -596,12 +682,27 @@ const App: React.FC = () => {
               handleChangeProjectCurrency={handleChangeProjectCurrency}
             />
             <div id="main-content">
+            {view === 'showChartAndGrid' ? (
               <ResizableContainer>
                 <div id="spreadsheet-container" className="spreadsheet-container">{gridElement}</div>
-                <div id="gantt-chart-container" className="fill-grid">
+                <div id="gantt-chart-container" className='fill-grid'>
                   <GanttChart project_name={project_name} key={refreshKey} rows={rows} />
                 </div>
               </ResizableContainer>
+            ) : (
+              <div className="container">
+                {view === 'onlyGrid' && (
+                  <div className="grid-only">
+                    <div id="spreadsheet-container" className="spreadsheet-container">{gridElement}</div>
+                  </div>
+                )}
+                {view === 'onlyChart' && (
+                  <div className="chart-only">
+                    <GanttChart project_name={project_name} key={refreshKey} rows={rows} />
+                  </div>
+                )}
+              </div>
+            )}
               <WorkerList
                 isOpen={showWorkerList}
                 currency={projectCurrency}
@@ -624,6 +725,26 @@ const App: React.FC = () => {
               <NewProjectCreator isOpen={newProjectCreator} onRequestClose={closeNewProjectCreator} onCreateProject={handleCreateNewProject} />
               <ErrorMessage message={error} onClose={handleCloseError} type={infoType}/>
               <TaskDescriptionWindow isModalOpen={showTaskDescription} initialDescription={handleInitDescription()} task_id={selectedCell?.rowIdx} onSave={handleAddTaskDescription} onCancel={() => setShowTaskDescription(false)} />
+              <Box sx={{ position: 'fixed', bottom: 16, right: 16 }}>
+                <Fab color="primary" onClick={handleClickAnchor}>
+                  <MoreVertIcon />
+                </Fab>
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={handleCloseAnchor}
+                >
+                  <MenuItem onClick={() => handleMenuItemClick('showChartAndGrid')}>
+                    <ViewModuleIcon sx={{ mr: 1 }} /> Show Chart and Grid
+                  </MenuItem>
+                  <MenuItem onClick={() => handleMenuItemClick('onlyGrid')}>
+                    <ViewListIcon sx={{ mr: 1 }} /> Only Grid
+                  </MenuItem>
+                  <MenuItem onClick={() => handleMenuItemClick('onlyChart')}>
+                    <ShowChartIcon sx={{ mr: 1 }} /> Only Chart
+                  </MenuItem>
+                </Menu>
+              </Box>
             </div>
           </>
         ) : (

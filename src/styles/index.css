@@ -88,6 +88,8 @@ html, body, #root {
 .fill-grid {
   /* flex: 1; */
   height: 100%;
+  border:none;
+  margin-top: 10px;
   /* display: flex;
   flex-direction: column; */
 }

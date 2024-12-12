@@ -8,6 +8,7 @@ interface Row {
     worker_id: string;
     parent_idx: string;
     previous: string;
+    description: string | null | undefined;
   }
 
 export {Row};

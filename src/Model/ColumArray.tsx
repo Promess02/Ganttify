@@ -36,13 +36,13 @@ const isHighlighted = (row: Row, rows: Row[]) => {
   return hasSubtasks;
 }
 
-export const getColumns = (rows: Row[], workers: Worker[],updateRowData: (rowIdx: number, columnKey: string, date: Date) => void): readonly Column<Row>[] => [
-  { key: 'idx', name: 'Index', editable: false, resizable: true, width: '55px', renderEditCell: textEditor,
+export const getColumns = (rows: Row[], view: string, workers: Worker[],updateRowData: (rowIdx: number, columnKey: string, date: Date) => void): readonly Column<Row>[] => [
+  { key: 'idx', name: 'Index', editable: false, resizable: true, width: `${view === 'onlyGrid' ? '100px': '55px'}`, renderEditCell: textEditor,
     renderCell: ({ row }) => renderCellWithBold(rows, row, 'idx')},
-  { key: 'name', name: 'Name', editable: true, width: '145px', renderEditCell: textEditor, renderCell: ({ row }) => renderCellWithBold(rows, row, 'name') },
-  { key: 'duration', name: 'Days', editable: true, width: '50px', renderEditCell: NumericEditor, renderCell: ({ row }) => renderCellWithBold(rows, row, 'duration')},
+  { key: 'name', name: 'Name', editable: true, width: `${view === 'onlyGrid' ? '300px': '150px'}`, renderEditCell: textEditor, renderCell: ({ row }) => renderCellWithBold(rows, row, 'name') },
+  { key: 'duration', name: `${view === 'onlyGrid' ? 'Duration (days)': 'Days'}`, editable: true, width: `${view === 'onlyGrid' ? '120px': '50px'}`, renderEditCell: NumericEditor, renderCell: ({ row }) => renderCellWithBold(rows, row, 'duration')},
   {
-    key: 'start_date', name: 'Start Date', editable: false, width: '110px', renderEditCell: textEditor,
+    key: 'start_date', name: 'Start Date', editable: false, width: `${view === 'onlyGrid' ? '150px': '120px'}`, renderEditCell: textEditor,
     renderCell: (props) => (
       <DateRenderer
         row={props.row}
@@ -53,7 +53,7 @@ export const getColumns = (rows: Row[], workers: Worker[],updateRowData: (rowIdx
     )
   },
   {
-    key: 'end_date', name: 'End date', editable: false, width: '110px', renderEditCell: textEditor,
+    key: 'end_date', name: 'End date', editable: false, width: `${view === 'onlyGrid' ? '150px': '120px'}`, renderEditCell: textEditor,
     renderCell: (props) => (
       <DateRenderer
         row={props.row}
@@ -63,7 +63,8 @@ export const getColumns = (rows: Row[], workers: Worker[],updateRowData: (rowIdx
       />
     )
   },
-  { key: 'hours', name: 'Hours', editable: true, width: '60px', renderEditCell: NumericEditor, renderCell: ({ row }) => renderCellWithBold(rows, row, 'hours')},
-  { key: 'worker_id', name: 'Worker', editable: false, width: '140px', renderEditCell: textEditor, renderCell: ({ row }) => renderWorker(rows, workers, row) },
-  { key: 'previous', name: 'Previous', editable: true, width: '90px', renderEditCell: textEditor, renderCell: ({ row }) => renderCellWithBold(rows, row, 'previous') }
+  { key: 'hours', name: 'Hours', editable: true, width: `${view === 'onlyGrid' ? '100px': '60px'}`, renderEditCell: NumericEditor, renderCell: ({ row }) => renderCellWithBold(rows, row, 'hours')},
+  { key: 'worker_id', name: 'Worker', editable: false, width: `${view === 'onlyGrid' ? '250px': '160px'}`, renderEditCell: textEditor, renderCell: ({ row }) => renderWorker(rows, workers, row) },
+  { key: 'previous', name: 'Previous', editable: true, width: '90px', renderEditCell: textEditor, renderCell: ({ row }) => renderCellWithBold(rows, row, 'previous') },
+  ...(view === 'onlyGrid' ? [{ key: 'description', name: 'Description', editable: false, width: '510px', renderEditCell: textEditor, renderCell: ({ row }) => renderCellWithBold(rows, row, 'description') }] : [])
 ];

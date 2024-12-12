@@ -16,31 +16,27 @@
 #main-content {
   display: flex;
   flex-direction: column;
-  height: 100%; /* Make the main content take up the full viewport height */
+  height: 100%;
 }
 
-#spreadsheet-container {
-  flex: 1; /* Allow the spreadsheet to grow and shrink */
-  overflow: auto; /* Add scroll if content overflows */
-  flex-direction: column;
-  width: 35%;
-}
-
-#gantt-chart-container {
-  flex: 1; /* Allow the Gantt chart to grow and shrink */
-  overflow: auto; /* Add scroll if content overflows */
+.container {
   display: flex;
-  flex-direction: column;
-  width: 55%;
+  height: 100%;
+  margin-top: 25px;
 }
 
-.data-grid-container {
-  margin: 20px auto;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  border-radius: 8px;
-  overflow: hidden;
+.grid-only, .chart-only {
+  width: 95%;
+  margin: auto;
 }
 
+.hidden {
+  display: none;
+}
+
+.both {
+  display: inherit;
+}
 /* Mermaid Gantt Chart Styles */
 #gantt-chart-container .mermaid {
   flex: 1; /* Make the mermaid chart take up all available space */
