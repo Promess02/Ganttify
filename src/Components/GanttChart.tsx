@@ -31,10 +31,9 @@ const GanttChart = ({ rows, project_name }) => {
 
         const ganttChart = `
           gantt
-          dateFormat  YYYY-MM-DD
-          title ${project_name}
-
-          ${ganttTasks}
+            title       Gantt Chart
+            dateFormat  YYYY-MM-DD
+            ${ganttTasks}
         `;
 
         try {

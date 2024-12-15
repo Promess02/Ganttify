@@ -30,6 +30,64 @@
   margin: auto;
 }
 
+.task-linked-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.task-chain {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.task-onlist {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px;
+  width: 200px;
+  border: 1px solid #007bff;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  position: relative;
+}
+
+.arrow-linkedlist {
+  width: 0;
+  height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 10px solid #007bff;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: -10px;
+}
+
+.network-only {
+  width: 95%;
+  margin: auto;
+}
+
+.react-flow__node {
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.react-flow__edge-path {
+  stroke: #ddd;
+  stroke-width: 2px;
+}
+
 .hidden {
   display: none;
 }

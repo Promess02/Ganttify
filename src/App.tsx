@@ -13,22 +13,23 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { Row } from "./Model/Row.tsx";
 import { initialRows } from './Model/data.tsx';
 import { getColumns } from './Model/ColumArray.tsx';
-import { findDepth, rowKeyGetter, findRowIndexByIdx, updateTimeColumns, getParentTaskId, sumParentHours } from './Util/UtilFunctions.tsx';
+import { findDepth, rowKeyGetter, findRowIndexByIdx, updateTimeColumns, getParentTaskId, handleGenerateReport } from './Util/UtilFunctions.tsx';
 import { handleAddRow, handleDeleteRow, handleAddSubtasks, handleIndentTask, handleOutdentTask } from './Logic/rowHandlers.tsx';
 import ErrorMessage from './Components/ErrorMessage.tsx';
 import WorkerList from './Components/WorkerList.tsx';
 import { Worker } from './Model/Worker.tsx';
 import LinkResourcePicker from './Components/LinkResourcePicker.tsx';
-import PDFDocument, { set } from 'pdfkit/js/pdfkit.standalone.js';
 import AuthScreen from './Components/AuthScreen.tsx';
 import axios from 'axios';
 import { htmlToText } from 'html-to-text';
-import blobStream from 'blob-stream';
 import '@fontsource/roboto/400.css'
 import ProjectPicker from './Components/ProjectPicker.tsx';
 import NewProjectCreator from './Components/NewProjectCreator.tsx';
 import { Project } from './Model/Project.tsx';
 import TaskDescriptionWindow from './Components/TaskDescriptionWindow.tsx';
+import TaskLinkedList from './Components/TaskLinkedList.tsx';
+import WBStree from './Components/WBStree.tsx';
+import { updateHours, updatePredecessor, updateEndDate, getAllSuccessors } from './Logic/RowUpdateHandlers.tsx';
 
 type SelectedCellState = {
   rowIdx: string;
@@ -60,9 +61,9 @@ const App: React.FC = () => {
   const [taskDescriptions, setTaskDescriptions] = useState<Description[]>([]);
   const [showTaskDescription, setShowTaskDescription] = useState<boolean>(false);
   const [infoType, setInfoType] = useState<boolean>(false);
-  const [view, setView] = useState('showChartAndGrid'); // Possible values: 'showChartAndGrid', 'onlyGrid', 'onlyChart'
+  const [view, setView] = useState<'showChartAndGrid' | 'onlyGrid' | 'onlyChart' | 'onlyNetwork' | 'onlyWBS'>('showChartAndGrid'); 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [projectsFetched, setProjectsFetched] = useState(false); // New state variable
+  const [projectsFetched, setProjectsFetched] = useState(false); 
 
   const handleLoginSuccess = (user_email: string) => {
     localStorage.setItem('isLoggedIn', 'true');
@@ -144,7 +145,8 @@ const App: React.FC = () => {
       });
 
       handleProjectSelect(projectId, responseTasks.data, responseWorkers.data);
-    } catch (error) {
+    } catch (error){
+      setInfoType(true);
       setError('project select error');
     }
   };
@@ -160,10 +162,34 @@ const App: React.FC = () => {
       end_date: task.end_date,
       hours: task.hours,
       worker_id: task.worker,
-      parent_idx: '',
-      previous: task.previous
+      parent_idx: task.parent,
+      previous: task.previous,
+      description: task.description
     }));
-    setRows(tasks);
+
+    const sortTasks = (tasks: any[], parentIdx: string = ''): any[] => {
+      return tasks
+      .filter(task => task.parent_idx === parentIdx)
+      .sort((a, b) => {
+        const aParts = a.idx.split('.').map(Number);
+        const bParts = b.idx.split('.').map(Number);
+        for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+          if (aParts[i] !== bParts[i]) {
+            return (aParts[i] || 0) - (bParts[i] || 0);
+          }
+        }
+        return 0;
+      })
+      .reduce((acc, task) => {
+        acc.push(task);
+        acc.push(...sortTasks(tasks, task.idx));
+        return acc;
+      }, []);
+    };
+
+    const sortedTasks = sortTasks(tasks);
+    setRows(sortedTasks);
+
     workers = workers.map((worker) => ({
       worker_id: worker.worker_id,
       name: worker.name,
@@ -187,7 +213,7 @@ const App: React.FC = () => {
     setAnchorEl(null);
   };
 
-  const handleMenuItemClick = (viewOption: string) => {
+  const handleMenuItemClick = (viewOption: 'showChartAndGrid' | 'onlyGrid' | 'onlyChart' | 'onlyNetwork' | 'onlyWBS') => {
     setView(viewOption);
     handleCloseAnchor();
   };
@@ -209,6 +235,9 @@ const App: React.FC = () => {
     try {
       const index = indexes[0];
       const updatedRow = updatedRows[index];
+      if (updatedRow.start_date == '') {
+        updatedRow.start_date = new Date().toISOString().split('T')[0];
+      }
 
       if (updatedRow.hours !== rows[index].hours) {
         updatedRows = updateHours(updatedRow.idx, updatedRows);
@@ -218,7 +247,7 @@ const App: React.FC = () => {
         updatedRows[index] = updatePredecessor(updatedRow, previous);
       }
       if (updatedRow.duration !== rows[index].duration) {
-        updatedRows[index] = updateEndDate(updatedRow);
+        updatedRows = updateEndDate(updatedRow, index, updatedRows);
       }
       if (updatedRow.end_date !== rows[index].end_date) {
         let successors = getAllSuccessors(updatedRow.idx, updatedRows);
@@ -231,7 +260,7 @@ const App: React.FC = () => {
       setRefreshKey(prevKey => prevKey + 1);
     } catch (error) {
       setInfoType(true);
-      setError('Error updating rows');
+      setError('Error updating rows: \n ' + error);
     }
   };
 
@@ -255,54 +284,7 @@ const App: React.FC = () => {
       setInfoType(true);
       setError('Error updating row data');
     }
-
   };
-
-  const updateHours = (rowIdx, updatedRows) => {
-    let parentIndex = findRowIndexByIdx(updatedRows, getParentTaskId(rowIdx));
-    if (parentIndex !== -1) {
-      updatedRows = sumParentHours(updatedRows, getParentTaskId(rowIdx));
-    }
-
-    return updatedRows;
-  }
-
-  const updatePredecessor = (updatedRow, previous) => {
-    let previousEndDate = new Date(previous.end_date);
-    let startDate = new Date(updatedRow.start_date);
-    let endDate = new Date(updatedRow.end_date);
-    if (previousEndDate.getTime() > startDate.getTime()) {
-      updatedRow.start_date = previous.end_date;
-      if (endDate.getTime() < previousEndDate.getTime()) {
-        updatedRow.end_date = updatedRow.start_date;
-      }
-      if (updatedRow.duration !== "") {
-        let newEndDate = new Date(updatedRow.start_date);
-        newEndDate.setDate(newEndDate.getDate() + parseInt(updatedRow.duration, 10));
-        updatedRow.end_date = newEndDate.toISOString().split('T')[0];
-      }
-    }
-    return updatedRow;
-  }
-
-  const updateEndDate = (row) => {
-    let startDate = new Date(row.start_date);
-    let duration = parseInt(row.duration, 10);
-    let endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + duration);
-    row.end_date = endDate.toISOString().split('T')[0];
-    return row;
-  }
-
-  const getAllSuccessors = (rowIdx, rows) => {
-    let successors = new Array<Row>();
-    rows.forEach(row => {
-      if (row.previous === rowIdx) {
-        successors.push(row);
-      }
-    });
-    return successors;
-  }
 
   const handleCloseError = () => {
     setError(null);
@@ -463,189 +445,6 @@ const App: React.FC = () => {
     .catch(error => setError('Saving project failed'));
   };
 
-  const handleGenerateReport = () => {
-    // Calculate the starting and ending dates of the project
-    const startDate = rows.reduce((earliest, row) => {
-      const rowStartDate = new Date(row.start_date);
-      return rowStartDate < earliest ? rowStartDate : earliest;
-    }, new Date(rows[0].start_date));
-
-    const endDate = rows.reduce((latest, row) => {
-      const rowEndDate = new Date(row.end_date);
-      return rowEndDate > latest ? rowEndDate : latest;
-    }, new Date(rows[0].end_date));
-
-    // Calculate the total amount of hours
-    const totalHours = rows.reduce((sum, row) => {
-      const depth = row.idx.split('.').length;
-      if (depth === 1) {
-        const hours = parseFloat(row.hours);
-        if (!isNaN(hours)) {
-          return sum + hours;
-        }
-      }
-      return sum;
-    }, 0);
-
-    // List the workers working on the project
-    const workersOnProject = workers.filter(worker =>
-      rows.some(row => row.worker_id === worker.worker_id)
-    );
-
-    // Calculate the total cost of the project
-    const totalCost = rows.reduce((sum, row) => {
-      const worker = workers.find(worker => worker.worker_id === row.worker_id);
-      if (worker) {
-        return sum + worker.pay_per_hour * parseFloat(row.hours);
-      }
-      return sum;
-    }, 0);
-
-    // Generate lists of tasks for each worker
-    const tasksByWorker = workersOnProject.map(worker => {
-      const tasks = rows
-        .filter(row => row.worker_id === worker.worker_id)
-        .map(row => ({
-          task_name: row.name,
-          task_id: row.idx,
-          start_date: row.start_date,
-          end_date: row.end_date,
-          hours: row.hours
-        }));
-      const totalHours = tasks.reduce((sum, task) => sum + parseFloat(task.hours), 0);
-      const totalPay = totalHours * worker.pay_per_hour;
-      return {
-        worker,
-        tasks,
-        totalHours,
-        totalPay
-      };
-    });
-
-    const fetchFont = async (url: string): Promise<ArrayBuffer> => {
-      const response = await fetch(url);
-      if (!response.ok) {
-        setError('Failed to fetch font');
-        setInfoType(true);
-      }
-      return await response.arrayBuffer();
-    };
-
-    // Generate the report
-    const generateReport = async () => {
-      const report = {
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate.toISOString().split('T')[0],
-        totalHours,
-        workersOnProject,
-        totalCost,
-        tasksByWorker
-      };
-
-      const fontBuffer = await fetchFont('/Roboto-Medium.ttf');
-
-      // Create a new PDF document
-      const doc = new PDFDocument();
-
-      // Create a stream to blob
-      const stream = doc.pipe(blobStream());
-
-      doc.registerFont('Roboto', fontBuffer);
-
-      doc.font('Roboto');
-
-      // Add title
-      doc.fontSize(18).text('Project Report', { align: 'center' });
-
-      // Add project dates
-      doc.moveDown();
-      doc.fontSize(12).text(`Start Date: ${report.startDate}`);
-      doc.text(`End Date: ${report.endDate}`);
-
-      // Add total hours
-      doc.moveDown();
-      doc.text(`Total Hours: ${report.totalHours}`);
-
-      const currencySymbol = (() => {
-        switch (projectCurrency) {
-          case 'USD':
-            return '$';
-          case 'EUR':
-            return '€';
-          case 'PLN':
-            return 'zł';
-          case 'GBP':
-            return '£';
-          default:
-            return '';
-        }
-      })();
-      // Add total cost
-      doc.moveDown();
-      doc.text(`Total Cost: ${report.totalCost.toFixed(2)}${currencySymbol}`);
-
-      // Add workers list
-      doc.moveDown();
-      doc.text('Workers on Project:');
-      report.workersOnProject.forEach((worker) => {
-        doc.text(`${worker.name} ${worker.surname} - ${worker.job_name}`);
-      });
-
-      // Add total hours and pay for each worker at the start
-      doc.addPage();
-      doc.fontSize(14).text('Total Hours and Pay for Each Worker:', { underline: true });
-      report.tasksByWorker.forEach((workerReport) => {
-        doc.moveDown();
-        doc.fontSize(12).text(`Worker: ${workerReport.worker.name} ${workerReport.worker.surname}`);
-        doc.text(`Total Hours: ${workerReport.totalHours}`);
-        doc.text(`Total Pay: ${workerReport.totalPay.toFixed(2)}${currencySymbol}`);
-      });
-
-      // Add tasks by worker
-      doc.moveDown();
-      report.tasksByWorker.forEach((workerReport, index) => {
-        if (index > 0) {
-          doc.addPage();
-        }
-        doc.moveDown();
-        doc.fontSize(14).text(`Tasks for ${workerReport.worker.name} ${workerReport.worker.surname}:`, { underline: true });
-        workerReport.tasks.forEach((task) => {
-          doc.moveDown();
-          doc.fontSize(12).text(`Task name: ${task.task_name}`);
-          doc.text(`Start Date: ${task.start_date}`);
-          doc.text(`End Date: ${task.end_date}`);
-          doc.text(`Hours: ${task.hours}`);
-          doc.text(`Total Pay: ${(parseFloat(task.hours) * workerReport.worker.pay_per_hour).toFixed(2)}${currencySymbol}`);
-          const description = taskDescriptions.find(description => description.task_id === task.task_id)?.description || 'No description';
-          // Convert HTML to plain text with basic formatting
-          const textDescription = htmlToText(description, {
-            wordwrap: 130,
-            tags: {
-              'a': { options: { hideLinkHrefIfSameAsText: true } },
-              'b': { format: 'bold' },
-              'i': { format: 'italic' },
-              'u': { format: 'underline' },
-            }
-          });
-          doc.text(`Description:`);
-          doc.text(textDescription);
-        });
-      });
-
-      // Finalize the PDF and end the stream
-      doc.end();
-
-      // When the stream is finished, create a blob and trigger the download
-      stream.on('finish', function () {
-        const blob = stream.toBlobURL('application/pdf');
-        window.open(blob);
-      });
-    };
-
-    // Call the generateReport function
-    generateReport().catch(error => console.error(error));
-  };
-
   const gridElement = (
     <DataGrid
       key={refreshKey}
@@ -661,6 +460,52 @@ const App: React.FC = () => {
     />
   );
 
+  const renderView = () => {
+    switch (view) {
+      case 'showChartAndGrid':
+        return (
+          <ResizableContainer>
+          <div id="spreadsheet-container" className="spreadsheet-container">{gridElement}</div>
+          <div id="gantt-chart-container" className='fill-grid'>
+            <GanttChart project_name={project_name} key={refreshKey} rows={rows} />
+          </div>
+        </ResizableContainer>
+        );
+      case 'onlyGrid':
+        return (
+          <div className='container'>
+            <div className="grid-only">
+            <div id="spreadsheet-container" className="spreadsheet-container">{gridElement}</div>
+            </div>
+          </div>  
+        );
+      case 'onlyChart':
+        return (
+          <div className='container'>
+          <div className="chart-only">
+            <GanttChart project_name={project_name} key={refreshKey} rows={rows} />
+          </div>
+          </div>
+        );
+      case 'onlyNetwork':
+        const rows_copy = rows;
+        return (
+          <div className="network-only">
+            <TaskLinkedList tasks={rows_copy} />
+          </div>
+        );
+      case 'onlyWBS':
+          return (
+            <div className="network-only">
+              <WBStree tasks={rows} />
+            </div>
+          );
+      default:
+        return  null;
+    }
+    
+  };  
+
   return (
     <div>
       {isLoggedIn ? (
@@ -674,7 +519,7 @@ const App: React.FC = () => {
               onHandleResources={handleDefineResource}
               onLinkResource={handleLinkResource}
               onUnlinkResource={handleUnlinkResource}
-              onGenerateReport={handleGenerateReport}
+              onGenerateReport={() => handleGenerateReport(rows, workers, projectCurrency, taskDescriptions)}
               onLogout={handleLogout}
               onSaveProject={handleSaveProject}
               onCreateNewProject={showNewProjectCreator}
@@ -682,27 +527,7 @@ const App: React.FC = () => {
               handleChangeProjectCurrency={handleChangeProjectCurrency}
             />
             <div id="main-content">
-            {view === 'showChartAndGrid' ? (
-              <ResizableContainer>
-                <div id="spreadsheet-container" className="spreadsheet-container">{gridElement}</div>
-                <div id="gantt-chart-container" className='fill-grid'>
-                  <GanttChart project_name={project_name} key={refreshKey} rows={rows} />
-                </div>
-              </ResizableContainer>
-            ) : (
-              <div className="container">
-                {view === 'onlyGrid' && (
-                  <div className="grid-only">
-                    <div id="spreadsheet-container" className="spreadsheet-container">{gridElement}</div>
-                  </div>
-                )}
-                {view === 'onlyChart' && (
-                  <div className="chart-only">
-                    <GanttChart project_name={project_name} key={refreshKey} rows={rows} />
-                  </div>
-                )}
-              </div>
-            )}
+             {renderView()}
               <WorkerList
                 isOpen={showWorkerList}
                 currency={projectCurrency}
@@ -742,6 +567,12 @@ const App: React.FC = () => {
                   </MenuItem>
                   <MenuItem onClick={() => handleMenuItemClick('onlyChart')}>
                     <ShowChartIcon sx={{ mr: 1 }} /> Only Chart
+                  </MenuItem>
+                  <MenuItem onClick={() => handleMenuItemClick('onlyNetwork')}>
+                    <ShowChartIcon sx={{ mr: 1 }} /> Only Network Chart
+                  </MenuItem>
+                  <MenuItem onClick={() => handleMenuItemClick('onlyWBS')}>
+                    <ShowChartIcon sx={{ mr: 1 }} /> Only WBS tree
                   </MenuItem>
                 </Menu>
               </Box>

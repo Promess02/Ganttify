@@ -19,7 +19,10 @@ interface Project {
   project_id: number;
   project_name: string;
 }
-
+type Description = {
+  task_id: string;
+  description: string;
+}
 interface MyAppBarProps {
   project_name: string;
   user_email: string;

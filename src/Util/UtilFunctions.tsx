@@ -1,4 +1,8 @@
 import { Row } from "../Model/Row.tsx";
+import { Worker } from "../Model/Worker.tsx";
+import PDFDocument, { set } from 'pdfkit/js/pdfkit.standalone.js';
+import blobStream from 'blob-stream';
+import { htmlToText } from 'html-to-text';
 
 export function incrementIndex(index: string): string {
     return handleIndexUpdate(index, true);
@@ -29,7 +33,8 @@ export function generateRow(idx: string, start_date: string, end_date: string, w
       hours: "",
       worker_id,
       parent_idx: parent_id,
-      previous: ""
+      previous: "",
+      description: "",
     };
   }
 
@@ -134,3 +139,160 @@ export function generateRow(idx: string, start_date: string, end_date: string, w
   export function getDateValue(date: string): number {
     return new Date(date).getDate().valueOf();
   }
+
+  type Description = {
+    task_id: string;
+    description: string;
+  }
+
+  export const handleGenerateReport = (rows: Row[], workers: Worker[], projectCurrency: 'USD' | 'EUR' | 'PLN' |'GBP', taskDescriptions: Description[]) => {
+    const startDate = rows.reduce((earliest, row) => {
+      const rowStartDate = new Date(row.start_date);
+      return rowStartDate < earliest ? rowStartDate : earliest;
+    }, new Date(rows[0].start_date));
+
+    const endDate = rows.reduce((latest, row) => {
+      const rowEndDate = new Date(row.end_date);
+      return rowEndDate > latest ? rowEndDate : latest;
+    }, new Date(rows[0].end_date));
+
+    const totalHours = rows.reduce((sum, row) => {
+      const depth = row.idx.split('.').length;
+      if (depth === 1) {
+        const hours = parseFloat(row.hours);
+        if (!isNaN(hours)) {
+          return sum + hours;
+        }
+      }
+      return sum;
+    }, 0);
+
+    const workersOnProject = workers.filter(worker =>
+      rows.some(row => row.worker_id === worker.worker_id)
+    );
+
+    const totalCost = rows.reduce((sum, row) => {
+      const worker = workers.find(worker => worker.worker_id === row.worker_id);
+      if (worker) {
+        return sum + worker.pay_per_hour * parseFloat(row.hours);
+      }
+      return sum;
+    }, 0);
+
+    const tasksByWorker = workersOnProject.map(worker => {
+      const tasks = rows
+        .filter(row => row.worker_id === worker.worker_id)
+        .map(row => ({
+          task_name: row.name,
+          task_id: row.idx,
+          start_date: row.start_date,
+          end_date: row.end_date,
+          hours: row.hours
+        }));
+      const totalHours = tasks.reduce((sum, task) => sum + parseFloat(task.hours), 0);
+      const totalPay = totalHours * worker.pay_per_hour;
+      return {
+        worker,
+        tasks,
+        totalHours,
+        totalPay
+      };
+    });
+
+    const fetchFont = async (url: string): Promise<ArrayBuffer> => {
+      const response = await fetch(url);
+      return await response.arrayBuffer();
+    };
+
+    const generateReport = async () => {
+      const report = {
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
+        totalHours,
+        workersOnProject,
+        totalCost,
+        tasksByWorker
+      };
+
+      const fontBuffer = await fetchFont('/Roboto-Medium.ttf');
+      const doc = new PDFDocument();
+      const stream = doc.pipe(blobStream());
+      doc.registerFont('Roboto', fontBuffer);
+      doc.font('Roboto');
+      doc.fontSize(18).text('Project Report', { align: 'center' });
+      doc.moveDown();
+      doc.fontSize(12).text(`Start Date: ${report.startDate}`);
+      doc.text(`End Date: ${report.endDate}`);
+      doc.moveDown();
+      doc.text(`Total Hours: ${report.totalHours}`);
+
+      const currencySymbol = (() => {
+        switch (projectCurrency) {
+          case 'USD':
+            return '$';
+          case 'EUR':
+            return '€';
+          case 'PLN':
+            return 'zł';
+          case 'GBP':
+            return '£';
+          default:
+            return '';
+        }
+      })();
+
+      doc.moveDown();
+      doc.text(`Total Cost: ${report.totalCost.toFixed(2)}${currencySymbol}`);
+      doc.moveDown();
+      doc.text('Workers on Project:');
+      report.workersOnProject.forEach((worker) => {
+        doc.text(`${worker.name} ${worker.surname} - ${worker.job_name}`);
+      });
+
+      doc.addPage();
+      doc.fontSize(14).text('Total Hours and Pay for Each Worker:', { underline: true });
+      report.tasksByWorker.forEach((workerReport) => {
+        doc.moveDown();
+        doc.fontSize(12).text(`Worker: ${workerReport.worker.name} ${workerReport.worker.surname}`);
+        doc.text(`Total Hours: ${workerReport.totalHours}`);
+        doc.text(`Total Pay: ${workerReport.totalPay.toFixed(2)}${currencySymbol}`);
+      });
+
+      doc.moveDown();
+      report.tasksByWorker.forEach((workerReport, index) => {
+        if (index > 0) {
+          doc.addPage();
+        }
+        doc.moveDown();
+        doc.fontSize(14).text(`Tasks for ${workerReport.worker.name} ${workerReport.worker.surname}:`, { underline: true });
+        workerReport.tasks.forEach((task) => {
+          doc.moveDown();
+          doc.fontSize(12).text(`Task name: ${task.task_name}`);
+          doc.text(`Start Date: ${task.start_date}`);
+          doc.text(`End Date: ${task.end_date}`);
+          doc.text(`Hours: ${task.hours}`);
+          doc.text(`Total Pay: ${(parseFloat(task.hours) * workerReport.worker.pay_per_hour).toFixed(2)}${currencySymbol}`);
+          const description = taskDescriptions.find(description => description.task_id === task.task_id)?.description || 'No description';
+          const textDescription = htmlToText(description, {
+            wordwrap: 130,
+            tags: {
+              'a': { options: { hideLinkHrefIfSameAsText: true } },
+              'b': { format: 'bold' },
+              'i': { format: 'italic' },
+              'u': { format: 'underline' },
+            }
+          });
+          doc.text(`Description:`);
+          doc.text(textDescription);
+        });
+      });
+
+      doc.end();
+      stream.on('finish', function () {
+        const blob = stream.toBlobURL('application/pdf');
+        window.open(blob);
+      });
+    };
+
+    generateReport().catch(error => console.error(error));
+  };
