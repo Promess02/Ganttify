@@ -173,7 +173,7 @@ export function generateRow(idx: string, start_date: string, end_date: string, w
 
     const totalCost = rows.reduce((sum, row) => {
       const worker = workers.find(worker => worker.worker_id === row.worker_id);
-      if (worker) {
+      if (worker && checkIfRowIsParent(rows, row.idx).length === 0) {
         return sum + worker.pay_per_hour * parseFloat(row.hours);
       }
       return sum;
@@ -189,7 +189,9 @@ export function generateRow(idx: string, start_date: string, end_date: string, w
           end_date: row.end_date,
           hours: row.hours
         }));
-      const totalHours = tasks.reduce((sum, task) => sum + parseFloat(task.hours), 0);
+
+      const leafTasks = tasks.filter(task => checkIfRowIsParent(rows, task.task_id).length === 0);
+      const totalHours = leafTasks.reduce((sum, task) => sum + parseFloat(task.hours), 0);
       const totalPay = totalHours * worker.pay_per_hour;
       return {
         worker,

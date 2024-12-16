@@ -30,6 +30,7 @@ import TaskDescriptionWindow from './Components/TaskDescriptionWindow.tsx';
 import TaskLinkedList from './Components/TaskLinkedList.tsx';
 import WBStree from './Components/WBStree.tsx';
 import { updateHours, updatePredecessor, updateEndDate, getAllSuccessors } from './Logic/RowUpdateHandlers.tsx';
+import { set } from 'pdfkit/js/pdfkit.standalone.js';
 
 type SelectedCellState = {
   rowIdx: string;
@@ -67,6 +68,7 @@ const App: React.FC = () => {
 
   const handleLoginSuccess = (user_email: string) => {
     localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('user_email', user_email);
     setIsLoggedIn(true);
     setUserEmail(user_email);
   };
@@ -76,6 +78,7 @@ const App: React.FC = () => {
     setSelectedProjectId(null);
     setRows([]);
     localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('user_email');
     localStorage.removeItem('selectedProjectId');
     localStorage.removeItem('token');
   };
@@ -116,6 +119,10 @@ const App: React.FC = () => {
     const storedIsLoggedIn = localStorage.getItem('isLoggedIn');
     if (storedIsLoggedIn === 'true') {
       fetchProjectsAndSelectedProject();
+    }
+    const storedUserEmail = localStorage.getItem('user_email');
+    if (storedUserEmail) {
+      setUserEmail(storedUserEmail);
     }
   }, []);
 
@@ -167,29 +174,19 @@ const App: React.FC = () => {
       description: task.description
     }));
 
-    const sortTasks = (tasks: any[], parentIdx: string = ''): any[] => {
-      return tasks
-      .filter(task => task.parent_idx === parentIdx)
-      .sort((a, b) => {
-        const aParts = a.idx.split('.').map(Number);
-        const bParts = b.idx.split('.').map(Number);
-        for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
-          if (aParts[i] !== bParts[i]) {
-            return (aParts[i] || 0) - (bParts[i] || 0);
-          }
-        }
-        return 0;
-      })
-      .reduce((acc, task) => {
-        acc.push(task);
-        acc.push(...sortTasks(tasks, task.idx));
-        return acc;
-      }, []);
-    };
+  tasks.sort((a, b) => {
+    const idxA = a.idx.split('.').map(Number); 
+    const idxB = b.idx.split('.').map(Number);
 
-    const sortedTasks = sortTasks(tasks);
-    setRows(sortedTasks);
+    for (let i = 0; i < Math.max(idxA.length, idxB.length); i++) {
+      const numA = idxA[i] || 0; 
+      const numB = idxB[i] || 0;
+      if (numA !== numB) return numA - numB; 
+    }
+    return 0; 
+  });
 
+  setRows(tasks);
     workers = workers.map((worker) => ({
       worker_id: worker.worker_id,
       name: worker.name,
@@ -350,6 +347,19 @@ const App: React.FC = () => {
     setRows(newRows);
   };
 
+  const handleDeleteProject = (projectId: number, err: string) => {
+    if (err!=='') {
+      setInfoType(true);
+      setError(err);
+      return;
+    }
+    setProjects(projects.filter(project => project.project_id !== projectId));
+    if (projectId === selectedProjectId) {
+      setSelectedProjectId(null);
+      localStorage.removeItem('selectedProjectId');
+    }
+  };
+
   const handlePickWorker = (worker_id: string) => {
     if (selectedCell) {
       const updatedRows = [...rows];
@@ -407,6 +417,11 @@ const App: React.FC = () => {
     return description === undefined ? "" : description;
   }
 
+  const handleChangeProjectName = (newName: string) => {
+    setProjectName(newName);
+    setProjects(projects.map(project => (project.project_id === selectedProjectId ? { ...project, project_name: newName } : project)));
+  }
+
   const handleSaveProject = () => {
     const token = localStorage.getItem('token');
     const body = {
@@ -426,6 +441,13 @@ const App: React.FC = () => {
         previous: row.previous,
         description: taskDescriptions.find(description => description.task_id === row.idx)?.description || ''
       })),
+      workers: workers.map(worker => ({
+        worker_id: worker.worker_id,
+        name: worker.name,
+        surname: worker.surname,
+        job: worker.job_name,
+        pay: worker.pay_per_hour
+      }))
     }
     if (!token) {
       setInfoType(true);
@@ -442,7 +464,10 @@ const App: React.FC = () => {
       setInfoType(false);
       setError('Project saved successfully');
     })
-    .catch(error => setError('Saving project failed'));
+    .catch(error => {
+      setInfoType(true);
+      setError('Saving project failed')
+    });
   };
 
   const gridElement = (
@@ -511,7 +536,7 @@ const App: React.FC = () => {
       {isLoggedIn ? (
         selectedProjectId ? (
           <>
-            <MyAppBar project_name={project_name} user_email={user_email} projects={projects} project_currency={projectCurrency} onProjectSelect={handleProjectSelect} onAddRow={() => handleAddRow(rows, setRows, selectedCell, setSelectedCell)}
+            <MyAppBar project_name={project_name} selectedProjectId={selectedProjectId} user_email={user_email} projects={projects} project_currency={projectCurrency} onProjectSelect={handleProjectSelect} onAddRow={() => handleAddRow(rows, setRows, selectedCell, setSelectedCell)}
               onDeleteRow={() => handleDeleteRow(rows, setRows, selectedCell, setSelectedCell)}
               onAddSubtasks={(numSubtasks) => handleAddSubtasks(rows, setRows, selectedCell, numSubtasks, setSelectedCell)}
               onIndentRow={() => handleIndentTask(rows, setRows, selectedCell, setSelectedCell)}
@@ -525,6 +550,8 @@ const App: React.FC = () => {
               onCreateNewProject={showNewProjectCreator}
               onAddTaskDescription={() => setShowTaskDescription(true)}
               handleChangeProjectCurrency={handleChangeProjectCurrency}
+              handleDeleteProject={handleDeleteProject}
+              onProjectNameChange={handleChangeProjectName}
             />
             <div id="main-content">
              {renderView()}
@@ -581,7 +608,7 @@ const App: React.FC = () => {
         ) : (
           <div>
             <NewProjectCreator isOpen={newProjectCreator} onRequestClose={closeNewProjectCreator} onCreateProject={handleCreateNewProject} />
-            <ProjectPicker handleCloseDrawer={() => { }} projects={projects} onProjectSelect={handleProjectSelect} onCreateNewProject={showNewProjectCreator} />
+            <ProjectPicker handleCloseDrawer={() => { }} projects={projects} onProjectSelect={handleProjectSelect} onCreateNewProject={showNewProjectCreator} onDeleteProject={handleDeleteProject} />
           </div>
         )
       ) : (

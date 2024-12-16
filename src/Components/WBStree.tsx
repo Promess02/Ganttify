@@ -35,9 +35,9 @@ interface WBStreeProps {
 
   const renderNode = ({ nodeDatum }) => (
     <g>
-      <circle r={15} />
-      <text fill="black" strokeWidth="1" x="20">
-        {nodeDatum.name}
+      <circle r={13} />
+      <text fill="black" strokeWidth="1" x="-25" y="50">
+        {nodeDatum.name.length > 15 ? `${nodeDatum.name.substring(0, 18)}...` : nodeDatum.name}
       </text>
     </g>
   );
@@ -47,7 +47,7 @@ const WBStree: React.FC<WBStreeProps> = ({ tasks }) => {
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-    <div id="treeWrapper" style={{ width: '80vw', height: '80vh' }}>
+    <div id="treeWrapper" style={{ width: '95vw', height: '80vh' }}>
       <Tree
             data={treeData}
             translate={{ x: (window.innerWidth / 2) - 200, y: 20 }}
@@ -56,7 +56,7 @@ const WBStree: React.FC<WBStreeProps> = ({ tasks }) => {
             branchNodeClassName="branch-node"
             leafNodeClassName="leaf-node"
             pathClassFunc={() => 'link'}
-            nodeSize={{ x: 200, y: 100 }}
+            nodeSize={{ x: 150, y: 200 }}
             renderCustomNodeElement={renderNode}
       />
     </div>

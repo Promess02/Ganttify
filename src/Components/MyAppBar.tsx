@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { AppBar, Box, Button, IconButton, Select, SelectChangeEvent, MenuItem, Toolbar, Drawer, List, ListItem, ListItemText, Typography, Divider, Link } from '@mui/material';
+import { AppBar, Box, Button, IconButton, TextField, Select, SelectChangeEvent, MenuItem, Toolbar, Drawer, List, ListItem, ListItemText, Typography, Divider, Link } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import '../styles/AppBar.css';
 import MenuIcon from '@mui/icons-material/Menu';
 import ProjectPicker from './ProjectPicker.tsx';
 import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SubdirectoryArrowRightIcon from '@mui/icons-material/SubdirectoryArrowRight';
 import FormatIndentIncreaseIcon from '@mui/icons-material/FormatIndentIncrease';
@@ -15,16 +16,15 @@ import LinkOffIcon from '@mui/icons-material/LinkOff';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import SaveIcon from '@mui/icons-material/Save';
 import DescriptionIcon from '@mui/icons-material/Description';
+import axios from 'axios';
+import { set } from 'pdfkit/js/pdfkit.standalone.js';
 interface Project {
   project_id: number;
   project_name: string;
 }
-type Description = {
-  task_id: string;
-  description: string;
-}
 interface MyAppBarProps {
   project_name: string;
+  selectedProjectId: number;
   user_email: string;
   projects: Project[];
   project_currency: string;
@@ -43,6 +43,8 @@ interface MyAppBarProps {
   onCreateNewProject: () => void;
   onAddTaskDescription: () => void;
   handleChangeProjectCurrency: (currency: 'USD' | 'GBP' | 'PLN' | 'EUR') => void;
+  handleDeleteProject: (projectId: number, err: string) => void;
+  onProjectNameChange: (projectName: string) => void;
 }
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
@@ -55,7 +57,9 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   },
 }));
 
-const MyAppBar: React.FC<MyAppBarProps> = ({ project_name, user_email, projects, project_currency, onProjectSelect, onAddRow, onDeleteRow, onAddSubtasks, onIndentRow, onOutdentRow, onHandleResources, onLinkResource, onUnlinkResource, onGenerateReport, onLogout, onSaveProject, onCreateNewProject, onAddTaskDescription, handleChangeProjectCurrency }) => {
+const MyAppBar: React.FC<MyAppBarProps> = ({ project_name, selectedProjectId, user_email, projects, project_currency, onProjectSelect, onAddRow, onDeleteRow, onAddSubtasks, onIndentRow, onOutdentRow, onHandleResources, onLinkResource, onUnlinkResource, onGenerateReport, onLogout, onSaveProject, onCreateNewProject, onAddTaskDescription, handleChangeProjectCurrency, handleDeleteProject, onProjectNameChange }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [newProjectName, setNewProjectName] = useState(project_name);
   const [numSubtasks, setNumSubtasks] = useState(1);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showProjects, setShowProjects] = useState(false);
@@ -75,6 +79,31 @@ const MyAppBar: React.FC<MyAppBarProps> = ({ project_name, user_email, projects,
     setDrawerOpen(open);
   };
 
+  const handleEditClick = () => {
+      setIsEditing(true);
+  };
+
+  const handleSaveClick = async () => {
+      try {
+          const response = await axios.put(`/projects/${selectedProjectId}/changeName`, { project_name: newProjectName }, {
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${localStorage.getItem('token')}`
+              }
+          });
+
+          if (response.status !== 200) {
+              throw new Error('Failed to update project name');
+          }
+
+          console.log(response.data.message);
+          setIsEditing(false);
+          onProjectNameChange(newProjectName);
+      } catch (error) {
+          console.error('Error updating project name:', error);
+      }
+  };
+
   const toggleProjects = () => {
     setShowProjects(!showProjects);
   };
@@ -91,7 +120,7 @@ const MyAppBar: React.FC<MyAppBarProps> = ({ project_name, user_email, projects,
   const drawerContent = (
     <Box
       sx={{
-        width: 300,
+        width: 400,
         p: 2,
         display: 'flex',
         flexDirection: 'column',
@@ -109,7 +138,26 @@ const MyAppBar: React.FC<MyAppBarProps> = ({ project_name, user_email, projects,
           User Email: <span style={{ color: '#007bff' }}>{user_email}</span>
         </Typography>
         <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: '#333' }}>
-          Project Name: <span style={{ color: '#007bff' }}>{project_name}</span>
+          Project Name: {isEditing ? (
+                    <>
+                        <TextField 
+                            value={newProjectName} 
+                            onChange={(e) => setNewProjectName(e.target.value)} 
+                            size="small" 
+                            sx={{ ml: 1 }}
+                        />
+                        <IconButton onClick={handleSaveClick} sx={{ ml: 1 }}>
+                            <SaveIcon />
+                        </IconButton>
+                    </>
+                ) : (
+                    <>
+                        <span style={{ color: '#007bff', marginLeft: '8px' }}>{project_name}</span>
+                        <IconButton onClick={handleEditClick} sx={{ ml: 1 }}>
+                            <EditIcon />
+                        </IconButton>
+                    </>
+                )}
         </Typography>
         <Divider sx={{ mb: 2 }} />
         <List>
@@ -117,7 +165,7 @@ const MyAppBar: React.FC<MyAppBarProps> = ({ project_name, user_email, projects,
             <ListItemText primary={showProjects?"Hide projects":"Show all projects"} primaryTypographyProps={{ fontSize: '1rem', fontWeight: 'bold' }} />
           </ListItem>
           {showProjects && (
-            <ProjectPicker projects={projects} handleCloseDrawer={handleCloseDrawer} onProjectSelect={onProjectSelect} onCreateNewProject={onCreateNewProject}/>
+            <ProjectPicker projects={projects} handleCloseDrawer={handleCloseDrawer} onProjectSelect={onProjectSelect} onCreateNewProject={onCreateNewProject} onDeleteProject={handleDeleteProject}/>
           )}
         </List>
         <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: '#333' }}>

@@ -77,7 +77,7 @@ export const getColumns = (rows: Row[], view: string, workers: Worker[],updateRo
     )
   },
   { key: 'hours', name: 'Hours', editable: true, width: `${view === 'onlyGrid' ? '100px': '60px'}`, renderEditCell: NumericEditor, renderCell: ({ row }) => renderCellWithBold(rows, row, row.hours)},
-  { key: 'worker_id', name: 'Worker', editable: false, width: `${view === 'onlyGrid' ? '250px': '160px'}`, renderEditCell: textEditor, renderCell: ({ row }) => renderWorker(rows, workers, row) },
+  { key: 'worker_id', name: 'Worker', editable: false, width: `${view === 'onlyGrid' ? '250px': '130px'}`, renderEditCell: textEditor, renderCell: ({ row }) => renderWorker(rows, workers, row) },
   { key: 'previous', name: 'Previous', editable: true, width: '90px', renderEditCell: textEditor, renderCell: ({ row }) => renderCellWithBold(rows, row, row.previous) },
   ...(view === 'onlyGrid' ? [{ key: 'description', name: 'Description', editable: false, width: '510px', renderEditCell: textEditor, renderCell: ({ row }) => renderCellWithBold(rows, row, row.description, true) }] : [])
 ];
