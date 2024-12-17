@@ -17,7 +17,6 @@ import AssessmentIcon from '@mui/icons-material/Assessment';
 import SaveIcon from '@mui/icons-material/Save';
 import DescriptionIcon from '@mui/icons-material/Description';
 import axios from 'axios';
-import { set } from 'pdfkit/js/pdfkit.standalone.js';
 interface Project {
   project_id: number;
   project_name: string;
@@ -45,6 +44,7 @@ interface MyAppBarProps {
   handleChangeProjectCurrency: (currency: 'USD' | 'GBP' | 'PLN' | 'EUR') => void;
   handleDeleteProject: (projectId: number, err: string) => void;
   onProjectNameChange: (projectName: string) => void;
+  onShowProjectEvaluation: () => void;
 }
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
@@ -57,7 +57,7 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   },
 }));
 
-const MyAppBar: React.FC<MyAppBarProps> = ({ project_name, selectedProjectId, user_email, projects, project_currency, onProjectSelect, onAddRow, onDeleteRow, onAddSubtasks, onIndentRow, onOutdentRow, onHandleResources, onLinkResource, onUnlinkResource, onGenerateReport, onLogout, onSaveProject, onCreateNewProject, onAddTaskDescription, handleChangeProjectCurrency, handleDeleteProject, onProjectNameChange }) => {
+const MyAppBar: React.FC<MyAppBarProps> = ({ project_name, selectedProjectId, user_email, projects, project_currency, onProjectSelect, onAddRow, onDeleteRow, onAddSubtasks, onIndentRow, onOutdentRow, onHandleResources, onLinkResource, onUnlinkResource, onGenerateReport, onLogout, onSaveProject, onCreateNewProject, onAddTaskDescription, handleChangeProjectCurrency, handleDeleteProject, onProjectNameChange, onShowProjectEvaluation }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [newProjectName, setNewProjectName] = useState(project_name);
   const [numSubtasks, setNumSubtasks] = useState(1);
@@ -229,6 +229,7 @@ const MyAppBar: React.FC<MyAppBarProps> = ({ project_name, selectedProjectId, us
             <Button className='bar-buttons' color="inherit" onClick={onUnlinkResource} startIcon={<LinkOffIcon/>}>Unlink Resource</Button>
             <Button className='bar-buttons' color="inherit" onClick={onGenerateReport} startIcon={<AssessmentIcon/>}>Generate Report</Button>
             <Button className='bar-buttons' color="inherit" onClick={onAddTaskDescription} startIcon={<DescriptionIcon/>}>Change description</Button>
+            <Button className='bar-buttons' color="inherit" onClick={onShowProjectEvaluation} startIcon={<AssessmentIcon/>}>Evaluate Project</Button>
           </Box>
         </StyledToolbar>
       </AppBar>

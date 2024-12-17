@@ -30,6 +30,7 @@ import TaskDescriptionWindow from './Components/TaskDescriptionWindow.tsx';
 import TaskLinkedList from './Components/TaskLinkedList.tsx';
 import WBStree from './Components/WBStree.tsx';
 import { updateHours, updatePredecessor, updateEndDate, getAllSuccessors } from './Logic/RowUpdateHandlers.tsx';
+import ProjectEvaluation from './Components/ProjectEvaluation.tsx';
 
 type SelectedCellState = {
   rowIdx: string;
@@ -64,6 +65,7 @@ const App: React.FC = () => {
   const [view, setView] = useState<'showChartAndGrid' | 'onlyGrid' | 'onlyChart' | 'onlyNetwork' | 'onlyWBS'>('showChartAndGrid'); 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [projectsFetched, setProjectsFetched] = useState(false); 
+  const [evaluation, setEvaluation] = useState(false);
 
   const handleLoginSuccess = (user_email: string) => {
     localStorage.setItem('isLoggedIn', 'true');
@@ -537,7 +539,7 @@ const App: React.FC = () => {
       {isLoggedIn ? (
         selectedProjectId ? (
           <>
-            <MyAppBar project_name={project_name} selectedProjectId={selectedProjectId} user_email={user_email} projects={projects} project_currency={projectCurrency} onProjectSelect={handleProjectSelect} onAddRow={() => handleAddRow(rows, setRows, selectedCell, setSelectedCell)}
+            <MyAppBar project_name={project_name} selectedProjectId={selectedProjectId} user_email={user_email} projects={projects} project_currency={projectCurrency} onProjectSelect={handleProjectSelect} onAddRow={() => handleAddRow(rows, setRows, selectedCell, setSelectedCell)} onShowProjectEvaluation={() => setEvaluation(true)}
               onDeleteRow={() => handleDeleteRow(rows, setRows, selectedCell, setSelectedCell)}
               onAddSubtasks={(numSubtasks) => handleAddSubtasks(rows, setRows, selectedCell, numSubtasks, setSelectedCell)}
               onIndentRow={() => handleIndentTask(rows, setRows, selectedCell, setSelectedCell)}
@@ -568,6 +570,7 @@ const App: React.FC = () => {
                 onDeleteWorker={handleDeleteWorker}
                 onModifyWorker={handleModifyWorker}
               />
+              <ProjectEvaluation isOpen={evaluation} rows={rows} workers={workers} onRequestClose={() => setEvaluation(false)}/>
               <LinkResourcePicker
                 isOpen={showLinkResource}
                 onRequestClose={() => setShowLinkResource(false)}

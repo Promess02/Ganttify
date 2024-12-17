@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Modal from 'react-modal';
 import { Worker } from '../Model/Worker.tsx';
 import '../styles/WorkerList.css';

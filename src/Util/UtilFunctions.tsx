@@ -145,18 +145,22 @@ export function generateRow(idx: string, start_date: string, end_date: string, w
     description: string;
   }
 
-  export const handleGenerateReport = (rows: Row[], workers: Worker[], projectCurrency: 'USD' | 'EUR' | 'PLN' |'GBP', taskDescriptions: Description[]) => {
-    const startDate = rows.reduce((earliest, row) => {
+  export const calculateStartDate = (rows: Row[]): Date => {
+    return rows.reduce((earliest, row) => {
       const rowStartDate = new Date(row.start_date);
       return rowStartDate < earliest ? rowStartDate : earliest;
     }, new Date(rows[0].start_date));
-
-    const endDate = rows.reduce((latest, row) => {
+  };
+  
+  export const calculateEndDate = (rows: Row[]): Date => {
+    return rows.reduce((latest, row) => {
       const rowEndDate = new Date(row.end_date);
       return rowEndDate > latest ? rowEndDate : latest;
     }, new Date(rows[0].end_date));
-
-    const totalHours = rows.reduce((sum, row) => {
+  };
+  
+  export const calculateTotalHours = (rows: Row[]): number => {
+    return rows.reduce((sum, row) => {
       const depth = row.idx.split('.').length;
       if (depth === 1) {
         const hours = parseFloat(row.hours);
@@ -166,20 +170,27 @@ export function generateRow(idx: string, start_date: string, end_date: string, w
       }
       return sum;
     }, 0);
-
-    const workersOnProject = workers.filter(worker =>
+  };
+  
+  export const filterWorkersOnProject = (rows: Row[], workers: Worker[]): Worker[] => {
+    return workers.filter(worker =>
       rows.some(row => row.worker_id === worker.worker_id)
     );
+  };
 
-    const totalCost = rows.reduce((sum, row) => {
+  export const calculateTotalCost = (rows: Row[], workers: Worker[]): number => {
+    return rows.reduce((sum, row) => {
       const worker = workers.find(worker => worker.worker_id === row.worker_id);
       if (worker && checkIfRowIsParent(rows, row.idx).length === 0) {
         return sum + worker.pay_per_hour * parseFloat(row.hours);
       }
       return sum;
     }, 0);
-
-    const tasksByWorker = workersOnProject.map(worker => {
+  };
+  
+  export const getTasksByWorker = (rows: Row[], workers: Worker[]): { worker: Worker, tasks: any[], totalHours: number, totalPay: number }[] => {
+    const workersOnProject = filterWorkersOnProject(rows, workers);
+    return workersOnProject.map(worker => {
       const tasks = rows
         .filter(row => row.worker_id === worker.worker_id)
         .map(row => ({
@@ -189,7 +200,7 @@ export function generateRow(idx: string, start_date: string, end_date: string, w
           end_date: row.end_date,
           hours: row.hours
         }));
-
+  
       const leafTasks = tasks.filter(task => checkIfRowIsParent(rows, task.task_id).length === 0);
       const totalHours = leafTasks.reduce((sum, task) => sum + parseFloat(task.hours), 0);
       const totalPay = totalHours * worker.pay_per_hour;
@@ -200,6 +211,15 @@ export function generateRow(idx: string, start_date: string, end_date: string, w
         totalPay
       };
     });
+  };
+
+  export const handleGenerateReport = (rows: Row[], workers: Worker[], projectCurrency: 'USD' | 'EUR' | 'PLN' |'GBP', taskDescriptions: Description[]) => {
+    const startDate = calculateStartDate(rows);
+    const endDate = calculateEndDate(rows);
+    const totalHours = calculateTotalHours(rows);
+    const workersOnProject = filterWorkersOnProject(rows, workers);
+    const totalCost = calculateTotalCost(rows, workers);
+    const tasksByWorker = getTasksByWorker(rows, workers);
 
     const fetchFont = async (url: string): Promise<ArrayBuffer> => {
       const response = await fetch(url);
