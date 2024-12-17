@@ -6,7 +6,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import Modal from 'react-modal';
 
 interface NewProjectCreatorProps {
-    onCreateProject: (projectName: string, projectStartDate: string) => void;
+    onCreateProject: (projectName: string, projectDescription: string, projectStartDate: string) => void;
     isOpen: boolean;
     onRequestClose: () => void;
 };
@@ -18,26 +18,7 @@ const NewProjectCreator: React.FC<NewProjectCreatorProps> = ({ onCreateProject, 
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const token = localStorage.getItem('token');
-        if (!token) {
-            console.error('No token found');
-            return;
-        }
-
-        try {
-            const response = await axios.post('http://localhost:4000/projects', {
-                projectName,
-                projectDescription
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            console.log('Project created:', response.data);
-        } catch (error) {
-            console.error('Error creating project:', error);
-        }
-        onCreateProject(projectName, projectStartDate);
+        onCreateProject(projectName, projectStartDate, projectDescription);
         onRequestClose();
     };
 

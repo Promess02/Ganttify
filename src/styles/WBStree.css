@@ -13,13 +13,13 @@
   }
   
   .root-node circle {
-    fill: #ff6347;
-    stroke: #ff6347;
+    fill: #4745c2;
+    stroke: #2e2266;
   }
   
   .branch-node circle {
-    fill: #ffa500;
-    stroke: #ffa500;
+    fill: #0084ff;
+    stroke: #0026ff;
   }
   
   .leaf-node circle {

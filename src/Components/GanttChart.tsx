@@ -1,7 +1,13 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef} from 'react';
 import mermaid from 'mermaid';
+import { Row } from '../Model/Row';
 
-const GanttChart = ({ rows, project_name }) => {
+interface GanttChartProps {
+  rows: Row[];
+  project_name: string;
+}
+
+const GanttChart: React.FC<GanttChartProps> = ({ rows, project_name }) => {
   const chartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -19,19 +25,21 @@ const GanttChart = ({ rows, project_name }) => {
       },
     });
 
-
     const renderChart = async () => {
       if (chartRef.current) {
         const ganttTasks = rows.map(row => {
           if (row.name && row.start_date && row.duration) {
-            return `${row.name} :${row.idx}, ${row.start_date}, ${row.duration}d`;
+            return `
+            ${!row.idx.includes('.') ? `section ${row.name}` : ''}
+            ${row.name} :${row.idx}, ${row.start_date}, ${row.duration}d
+            `;
           }
           return '';
         }).filter(task => task !== '').join('\n');
 
         const ganttChart = `
           gantt
-            title       Gantt Chart
+            title       ${project_name}
             dateFormat  YYYY-MM-DD
             ${ganttTasks}
         `;
@@ -49,7 +57,7 @@ const GanttChart = ({ rows, project_name }) => {
     };
 
     renderChart();
-  }, [rows]);
+  });
 
   return <div ref={chartRef}></div>;
 };

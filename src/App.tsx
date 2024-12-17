@@ -30,7 +30,6 @@ import TaskDescriptionWindow from './Components/TaskDescriptionWindow.tsx';
 import TaskLinkedList from './Components/TaskLinkedList.tsx';
 import WBStree from './Components/WBStree.tsx';
 import { updateHours, updatePredecessor, updateEndDate, getAllSuccessors } from './Logic/RowUpdateHandlers.tsx';
-import { set } from 'pdfkit/js/pdfkit.standalone.js';
 
 type SelectedCellState = {
   rowIdx: string;
@@ -232,7 +231,7 @@ const App: React.FC = () => {
     try {
       const index = indexes[0];
       const updatedRow = updatedRows[index];
-      if (updatedRow.start_date == '') {
+      if (updatedRow.start_date === '') {
         updatedRow.start_date = new Date().toISOString().split('T')[0];
       }
 
@@ -315,12 +314,9 @@ const App: React.FC = () => {
     setNewProjectCreator(false);
   }
 
-  const handleCreateNewProject = (project: string, project_start: string) => {
-    setProjectName(project);
+  const handleCreateNewProject = (project: string, project_start: string, project_description: string) => {
     const newRows = new Array<Row>();
-    for (let i = 1; i < 21; i++) {
-      newRows.push({ idx: String(i), name: 'Task ' + String(i), duration: '1', start_date: project_start, end_date: project_start, hours: '1', worker_id: '', parent_idx: '', previous: '', description: '' });
-    }
+    newRows.push({ idx: '1', name: 'First task', duration: '0', start_date: project_start, end_date: project_start, hours: '0', worker_id: '', parent_idx: '', previous: '', description: '' });
 
     const token = localStorage.getItem('token');
     if (!token) {
@@ -331,18 +327,23 @@ const App: React.FC = () => {
 
     axios.post('/projects', {
       projectName: project,
-      projectDescription: '',
+      projectDescription: project_description,
+      startDate: project_start,
     }, {
       headers: {
         Authorization: `Bearer ${token}`
       }
     }).then(response => {
       const newProject = response.data;
+      newProject.description = project_description;
+      newProject.project_name = project;
+      newProject.start_date = project_start;
       setProjects([...projects, newProject]);
+      setProjectName(project);
       setSelectedProjectId(newProject.project_id);
       setInfoType(false);
       setError('Project created successfully');
-    }).catch(error => setError('Saving project failed'));
+    }).catch(error => setError('Creating project failed'));
 
     setRows(newRows);
   };
