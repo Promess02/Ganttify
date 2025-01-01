@@ -10,6 +10,7 @@ import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { FaReact } from 'react-icons/fa'; 
 import { Row } from "./Model/Row.tsx";
 import { initialRows } from './Model/data.tsx';
 import { getColumns } from './Model/ColumArray.tsx';
@@ -72,7 +73,8 @@ const App: React.FC = () => {
     localStorage.setItem('user_email', user_email);
     setIsLoggedIn(true);
     setUserEmail(user_email);
-  };
+    fetchProjects();
+   };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
@@ -126,6 +128,33 @@ const App: React.FC = () => {
       setUserEmail(storedUserEmail);
     }
   }, []);
+
+  const fetchProjects = async () => {
+    const fetchProjectsAndSelectedProject = async () => {
+      if (projectsFetched){
+        return;
+      }
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setInfoType(true);
+          setError('No token found');
+          return;
+        }
+
+        const response = await axios.get('/projects', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        setProjects(response.data);
+        setProjectsFetched(true);
+      } catch (error) {
+        setInfoType(true);
+        setError('fetch error');
+      }
+    };
+  }
 
   useEffect(() => {
     if (projectsFetched && selectedProjectId !== null) {
@@ -610,13 +639,52 @@ const App: React.FC = () => {
             </div>
           </>
         ) : (
-          <div>
+          <div style={{ backgroundColor: '#dbe4f8', height: '100vh' }}>
+          <header className='app-header'>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ 
+              width: 80, 
+              height: 80, 
+              borderRadius: '50%', 
+              backgroundColor: 'white', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              marginRight: '10px' 
+              }}>
+              <img src="/logo_gantt-removebg-preview.png" alt="Ganttify Logo" style={{ width: 70, height: 70 }} />
+            </div>
+            <span className='title'>Ganttify</span>
+          </div>
+          <button className='about-button'>About us</button>
+          </header>
+            <h2 style={{ textAlign: 'center', marginTop: '20px' }}>Select project or create a new one: </h2>
             <NewProjectCreator isOpen={newProjectCreator} onRequestClose={closeNewProjectCreator} onCreateProject={handleCreateNewProject} />
             <ProjectPicker handleCloseDrawer={() => { }} projects={projects} onProjectSelect={handleProjectSelect} onCreateNewProject={showNewProjectCreator} onDeleteProject={handleDeleteProject} />
           </div>
         )
       ) : (
-        <AuthScreen onLoginSuccess={handleLoginSuccess} />
+        <div style={{ backgroundColor: '#dbe4f8', height: '100vh' }}>
+          <header className='app-header'>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <div style={{ 
+              width: 80, 
+              height: 80, 
+              borderRadius: '50%', 
+              backgroundColor: 'white', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              marginRight: '10px' 
+              }}>
+              <img src="/logo_gantt-removebg-preview.png" alt="Ganttify Logo" style={{ width: 70, height: 70 }} />
+              </div>
+              <span className='title'>Ganttify</span>
+            </div>
+          <button className='about-button'>About us</button>
+          </header>
+            <AuthScreen onLoginSuccess={handleLoginSuccess} />
+        </div>
       )}
     </div>
   );

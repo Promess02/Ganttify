@@ -6,7 +6,6 @@ class TaskNode {
   rowNumber: number; 
   row: Row; 
   children: TaskNode[]; 
-  isLastChild: boolean;
   level: number;
   parent: TaskNode | null; 
 
@@ -16,14 +15,12 @@ class TaskNode {
     this.row = row;
     this.parent = parent;
     this.children = [];
-    this.isLastChild = false;
     this.level = row.idx.split(".").length;
   }
 
   // Add a child to the node
   addChild(newChild: TaskNode) {
     this.children.push(newChild);
-    this.updateLastChildFlags();
     this.orderChildrenByIndex();
   }
 
@@ -34,7 +31,6 @@ class TaskNode {
     );
     if (childIndex !== -1) {
       this.children.splice(childIndex, 1);
-      this.updateLastChildFlags();
     }
     this.orderChildrenByIndex();
   }
@@ -97,17 +93,6 @@ class TaskNode {
     }
   }
 
-  // Update the isLastChild flag for all children
-  updateLastChildFlags() {
-    for (let i = 0; i < this.children.length; i++) {
-      if (i !== this.children.length - 1) {
-        this.children[i].isLastChild = false;
-      } else {
-        this.children[i].isLastChild = true;
-      }
-    }
-  }
-
   orderChildrenByIndex() {
     this.children.sort((a, b) => {
       const aParts = a.rowIdx.split('.').map(Number);
@@ -143,7 +128,8 @@ export class TaskTree {
         hours: "",
         worker_id: "",
         parent_idx: "",
-        previous: ""
+        previous: "",
+        description: ""
       },
       -1
     );
@@ -175,38 +161,25 @@ export class TaskTree {
 
   private buildTree() {
     const nodeMap: { [key: string]: TaskNode } = {};
-
-    // Add all tasks as TaskNodes, and store them in a map for easy access by index
-
-    for (const child of this.root.children) {
-      nodeMap[child.rowNumber] = child;
-    }
     let i = 0;
     for (const row of this.rows) {
       const taskNode = new TaskNode(row, i++);
       nodeMap[row.idx] = taskNode;
-
-      // Add tasks with no dots (e.g., 1, 2, 3) directly under the root
       if (taskNode.level === 1) {
         this.root.addChild(taskNode);
         taskNode.parent = this.root; // Set parent to root
       }
-    }
+    }        
 
-    // Now, link all tasks to their respective parents based on their indices
     for (const row of this.rows) {
       const taskNode = nodeMap[row.idx];
-
-      // Skip root-level tasks as they are already added to the root
       if (taskNode.level === 1) continue;
-
-      // Find parent index (remove the last segment of the index)
       const parentIndex = row.idx.split(".").slice(0, -1).join(".");
       const parentNode = nodeMap[parentIndex];
 
       if (parentNode) {
         parentNode.addChild(taskNode);
-        taskNode.parent = parentNode; // Set the parent attribute
+        taskNode.parent = parentNode;
         parentNode.children.sort((a, b) => a.rowNumber - b.rowNumber);
       }
     }
@@ -245,7 +218,6 @@ export class TaskTree {
       }
       // Update the last-child flag
       this.fixTreeAfterUpdate();
-      parent.updateLastChildFlags();
     }
   }
 
@@ -270,7 +242,6 @@ export class TaskTree {
       }
 
       this.fixTreeAfterUpdate();
-      parent.updateLastChildFlags();
     }
   }
 

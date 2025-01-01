@@ -182,10 +182,49 @@ html, body, #root {
   border: none;
   border-radius: 3px;
   background-color: #007bff;
-  color: #fff;
+  color: #ffffff;
   cursor: pointer;
 }
 
 .new-project-creator button:hover {
   background-color: #0056b3;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px 50px;
+  background-color: #007bff;
+  color: #fff;
+}
+
+.title {
+  font-family: Arial;
+  margin-left: 12px;
+  font-size: 32px;
+  font-weight: bold;
+}
+
+.about-button {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 16px;
+  padding: 20px 32px;
+  cursor: pointer;
+  border: none;
+  font-weight: bold;
+  border-radius: 5px;
+  background-color: #007bff;
+  color: #ffffff;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.about-button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+.about-button:active {
+  background-color: #004494;
+  transform: scale(1);
 }

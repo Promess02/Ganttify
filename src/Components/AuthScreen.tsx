@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Button, TextField, Tabs, Tab } from '@mui/material';
+import { Box, Button, TextField, Tabs, Tab, Typography } from '@mui/material';
 import axios from 'axios';
 
 interface AuthScreenProps {
@@ -14,20 +14,20 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
     const [surname, setSurname] = useState('');
-    const [newPassword, setNewPassword] = useState('');
+    const [error, setError] = useState('');
 
     const handleTabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
         setTab(newValue);
+        setError(''); // Clear error when switching tabs
     };
 
     const handleLogin = async () => {
         try {
             const response = await axios.post('/login', { email, password });
             localStorage.setItem('token', response.data.token);
-            console.log(response.data.user);
             onLoginSuccess(response.data.user.email);
         } catch (error) {
-            console.error(error);
+            setError(error.response?.data?.error || 'Login failed');
         }
     };
 
@@ -38,28 +38,20 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
             console.log(response.data);
             onLoginSuccess('placeholder_email');
         } catch (error) {
-            console.error(error);
+            setError(error.response?.data?.error || 'Registration failed');
         }
     };
-
-    const handleResetPassword = async () => {
-        try {
-            const response = await axios.post('/reset-password', { email, newPassword });
-            console.log(response.data);
-            // Handle successful password reset
-        } catch (error) {
-            console.error(error);
-            // Handle password reset error
-        }
-    };
-
     return (
         <Box sx={{ width: '100%', maxWidth: 360, mx: 'auto', mt: 4 }}>
             <Tabs value={tab} onChange={handleTabChange} centered>
                 <Tab label="Login" />
                 <Tab label="Register" />
-                <Tab label="Reset Password" />
             </Tabs>
+            {error && (
+                <Typography color="error" sx={{ mt: 2 }}>
+                    {error}
+                </Typography>
+            )}
             {tab === 0 && (
                 <Box sx={{ mt: 2 }}>
                     <TextField
@@ -115,28 +107,6 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
                     />
                     <Button variant="contained" color="primary" fullWidth onClick={handleRegister}>
                         Register
-                    </Button>
-                </Box>
-            )}
-            {tab === 2 && (
-                <Box sx={{ mt: 2 }}>
-                    <TextField
-                        label="Email"
-                        fullWidth
-                        margin="normal"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-                    <TextField
-                        label="New Password"
-                        type="password"
-                        fullWidth
-                        margin="normal"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                    />
-                    <Button variant="contained" color="primary" fullWidth onClick={handleResetPassword}>
-                        Reset Password
                     </Button>
                 </Box>
             )}
