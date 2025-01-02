@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import '../styles/NewProject.css';
-import axios from 'axios';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import Modal from 'react-modal';

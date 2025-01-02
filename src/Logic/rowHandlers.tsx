@@ -1,4 +1,3 @@
-// import 'react-data-grid/lib/styles.css';
 import React from 'react';
 import { TaskTree } from './TaskTree.tsx'; 
 import { Row } from "../Model/Row.tsx";
@@ -81,12 +80,4 @@ type SelectedCellState = {
       setRows(taskTree.rows);
       resetSelectedCell(selectedCell.rowIdx, taskTree.rows, setSelectedCell);
     }
-  }
-
-  export const handleDefineResource = (
-    rows: Row[],
-    setRows: React.Dispatch<React.SetStateAction<Row[]>>,
-    selectedCell: SelectedCellState | null,
-    setSelectedCell: React.Dispatch<React.SetStateAction<SelectedCellState | null>>
-  ) => {
   }

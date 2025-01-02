@@ -10,7 +10,6 @@ import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import { FaReact } from 'react-icons/fa'; 
 import { Row } from "./Model/Row.tsx";
 import { initialRows } from './Model/data.tsx';
 import { getColumns } from './Model/ColumArray.tsx';
@@ -130,7 +129,6 @@ const App: React.FC = () => {
   }, []);
 
   const fetchProjects = async () => {
-    const fetchProjectsAndSelectedProject = async () => {
       if (projectsFetched){
         return;
       }
@@ -153,7 +151,6 @@ const App: React.FC = () => {
         setInfoType(true);
         setError('fetch error');
       }
-    };
   }
 
   useEffect(() => {

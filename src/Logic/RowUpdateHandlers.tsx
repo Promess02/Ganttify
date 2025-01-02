@@ -1,5 +1,5 @@
 import { Row } from "../Model/Row";
-import { findRowIndexByIdx, updateTimeColumns, getDiffTime, getParentTaskId, sumParentHours } from '../Util/UtilFunctions.tsx';
+import { findRowIndexByIdx, getDiffTime, getParentTaskId, sumParentHours } from '../Util/UtilFunctions.tsx';
 
 export const updateHours = (rowIdx: string, updatedRows: Row[]) => {
   let parentIndex = findRowIndexByIdx(updatedRows, getParentTaskId(rowIdx));
